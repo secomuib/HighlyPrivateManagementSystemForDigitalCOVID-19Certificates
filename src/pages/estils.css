@@ -1,0 +1,11 @@
+
+.swal-text {
+    border: 1px solid rgba(0, 68, 255, 0.514);
+    display: block;
+    
+}
+
+.text{
+    margin-right: 5px;
+    text-align: left;
+}
