@@ -4,18 +4,28 @@ pragma solidity >0.7.4;
 
 contract who{
     //Direcció del propietari 
-    address owner = 0x70F6714dCa2f53A17558C5dff99D572959f77D9c;
+    address owner = 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4;
     
     address[] public Active_Labs;
     address[] public Active_Users;
+    mapping (uint256 => request) public requests;
     mapping (address => struct_Lab) public Lab;
     mapping (address => address) public userSC;
+    uint256 numRequests = 0;
     
     struct struct_Lab{
         string name;
         bool active;
         address sc_adr;
     }
+
+    struct request{
+        bool resolved;
+        address alice_address;
+        address entity;
+    }
+
+
     event newLab(string, address);
     function registerLab(address payable _lab, string memory _name) public onlyOwner() {
         Lab[_lab].sc_adr = address(new lab(_lab));
@@ -75,6 +85,27 @@ contract who{
         Lab[_lab].active = false;
         lab(_sc_adr).destruct();
     }
+
+    function getAliceDocs(address _alices_address, address _entity_address) public {
+        requests[numRequests].alice_address = _alices_address;
+        requests[numRequests].entity = _entity_address;
+        requests[numRequests].resolved = false;
+        numRequests = numRequests + 1;
+    }
+    
+    function obtainRequests(uint256 _identifier) public view onlyOwner() returns(address alice_address, address entityReq) {
+        if(!requests[_identifier].resolved){
+            return (requests[_identifier].alice_address, requests[_identifier].entity);
+        }
+    }
+    
+    function resolveAliceDocs(uint256 _identifier) public onlyOwner(){
+        address aliceAdr = requests[_identifier].alice_address;
+        address aliceSC = userSC[aliceAdr];
+        address entitat = requests[_identifier].entity;
+        requests[_identifier].resolved = true;
+        user(aliceSC).newSol(entitat);
+    }
     
     modifier onlyOwner(){
         require(msg.sender == owner, "L'adresa que ha realitzat la crida no te els permissos de propietat.");
@@ -87,7 +118,6 @@ contract who{
     }*/
     
 }
-
 contract lab{
     
     address payable  owner;
@@ -115,7 +145,7 @@ contract lab{
 
     event newDocument(address);
     function carregaDocument(address _alice_SC_Adr, string memory _hashDoc, string memory _capsule) public onlyOwner() returns (string memory){
-        hashA = _hashDoc;
+        
         user(_alice_SC_Adr).newDoc(_hashDoc, _capsule);
 
         emit newDocument(_alice_SC_Adr);
@@ -142,10 +172,17 @@ contract user{
     address sc_adr;
     address owner;
     bool entity;
+    uint256 numRequests = 0;
     
     mapping (string => uint256) public indexDocs;
     //mapping (string => uint256) index_extDocs;
     mapping (string => kfrags) public kfrag;
+    mapping (uint256 => request) public requests;
+    
+    struct request{
+        bool resolved;
+        address entity_address;
+    }
     
     struct kfrags{
         string exthash;
@@ -252,6 +289,18 @@ contract user{
     function getEntity()public view returns (bool){
         return entity;
     }
+    
+    function newSol(address _entityAdr) public {
+        requests[numRequests].entity_address = _entityAdr;
+        requests[numRequests].resolved = false;
+        numRequests = numRequests + 1;
+    }
+    
+    function obtainRequests(uint256 _identifier) public view onlyOwner() returns(address entityReq) {
+        if(!requests[_identifier].resolved){
+            return (requests[_identifier].entity_address);
+        }
+    }
 
     modifier onlyOwner(/*address _owner*/){
         require(msg.sender == owner, "L'adresa que ha realitzat la crida no te els permissos de propietat.");
@@ -259,7 +308,7 @@ contract user{
     }
     
     modifier onlyWHO(){
-        require(msg.sender == 0x70F6714dCa2f53A17558C5dff99D572959f77D9c, "L'adresa que ha realitzat la crida no te els permissos de propietat.");
+        require(msg.sender == 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4, "L'adresa que ha realitzat la crida no te els permissos de propietat.");
         _;
     }
 }
