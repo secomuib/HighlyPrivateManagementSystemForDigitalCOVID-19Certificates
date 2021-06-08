@@ -4,6 +4,7 @@ import who from '../ethereum/who';
 import web3 from '../ethereum/web3';
 import {Icon, Form, Button, Message, Segment, Input, Divider, Grid, Dimmer, Loader, Table, GridColumn} from 'semantic-ui-react';
 import DeliveryRow from '../components/DeliveryRow';
+import LlistatSolicituds from '../components/LlistatSolicituds';
 
 class Who extends Component {
   state = {
@@ -17,6 +18,7 @@ class Who extends Component {
     errorMessageAlta: '',
     numLabs: '',
     ArrayLabs: [],
+    Docsrequests: [],
     loading: false,
     loadingPage: true
   };
@@ -126,7 +128,6 @@ class Who extends Component {
 
   componentDidMount = async () => {
     try{
-
       const accounts =  await web3.eth.getAccounts();
       console.log("HOLA");
       const NumLaboratorios = await who.methods.getLabsCount().call({from: accounts[0]});
@@ -165,12 +166,28 @@ class Who extends Component {
                 return who.methods.getLabName(address).call({from: accounts[0]});
             })
       );
+      const NumRequests = await who.methods.getNumRequests().call({from: accounts[0]});
+
+      const requests = await Promise.all(
+        Array(parseInt(NumRequests))
+            .fill()
+            .map((delivery, index) => {
+              return who.methods.obtainRequests(index).call({from: accounts[0]});
+            })
+      );
+
+      console.log('Requests ');
+      console.log(requests);
 
       this.setState({
           ArrayLabs: ArrayLabs,
           labName: ArrayNames, 
-          StateLabs: statLabs
+          StateLabs: statLabs, 
+          Docsrequests: requests
       });
+
+
+
 
     }finally{
       this.setState({ loadingPage: false })
@@ -199,6 +216,30 @@ class Who extends Component {
             />
         );
       });   
+  };
+
+  renderSolicituds(){
+    var solicituds;
+
+    solicituds = this.state.Docsrequests;
+    console.log("Solicituds "+ solicituds);
+
+    return solicituds.map((delivery, index) => {
+      console.log(solicituds[index][0]);
+      console.log(solicituds[index][1]);
+        if(solicituds[index][0] !=="0x0000000000000000000000000000000000000000" || 
+            solicituds[index][0] !=="0x0000000000000000000000000000000000000000"){
+            return (
+              <LlistatSolicituds
+                  key={index}
+                  id={index}
+                  sol_Addr_Alice={solicituds[index][0]}
+                  sol_Addr_Bob={solicituds[index][1]}
+              />
+            );
+          }
+      
+    });   
   };
 
   render() {
@@ -323,6 +364,20 @@ class Who extends Component {
           </Form>
           </Grid.Column>
         </Grid>
+        <h3><Icon name="check icon" ></Icon>Solicitud de documentos: </h3>
+              <Table fixed>
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.HeaderCell style={{ width: 90}}>#</Table.HeaderCell>
+                            <Table.HeaderCell style={{width: 300}, {fontSize:'15px'}}>Dirección del usuario solicitante</Table.HeaderCell>
+                            <Table.HeaderCell style={{ width: 300}, {fontSize:'15px'}}>Dirección del usuario </Table.HeaderCell>
+                            <Table.HeaderCell style={{ width: 90}}> </Table.HeaderCell>
+                            <Table.HeaderCell style={{ width: 90}}> </Table.HeaderCell>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body >{this.renderSolicituds()}</Table.Body>
+                </Table>
+          <h1></h1>      
       </div>
     );
   }

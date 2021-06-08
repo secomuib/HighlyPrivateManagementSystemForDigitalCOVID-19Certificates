@@ -4,8 +4,8 @@ pragma solidity >0.7.4;
 
 contract who{
     //Direcció del propietari 
-    address owner = 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4;
-    
+    address owner = 0x70F6714dCa2f53A17558C5dff99D572959f77D9c;
+    address SC_WHO;
     address[] public Active_Labs;
     address[] public Active_Users;
     mapping (uint256 => request) public requests;
@@ -25,6 +25,10 @@ contract who{
         address entity;
     }
 
+    constructor(){
+        SC_WHO = address(uint160(address(this)));    
+    }
+
 
     event newLab(string, address);
     function registerLab(address payable _lab, string memory _name) public onlyOwner() {
@@ -38,7 +42,7 @@ contract who{
     event new_User(address);
     function registerUser(address _owner, string memory _pubKey) external returns (address) {
         address userOwner = _owner;
-        address sc_adr = address(new user(userOwner, _pubKey));
+        address sc_adr = address(new user(userOwner, _pubKey, SC_WHO));
         Active_Users.push(userOwner);
         userSC[userOwner] = sc_adr;
         
@@ -80,6 +84,10 @@ contract who{
     function getUserSC(address adr_User) public view onlyOwner() returns(address){
         return userSC[adr_User];
     }
+    
+    function getWHO_sc_address() public view returns (address) {
+        return SC_WHO;
+    }
 
     function deleteLab(address _lab, address _sc_adr) public onlyOwner(){
         Lab[_lab].active = false;
@@ -90,9 +98,17 @@ contract who{
         requests[numRequests].alice_address = _alices_address;
         requests[numRequests].entity = _entity_address;
         requests[numRequests].resolved = false;
+        address entitySC = userSC[_entity_address];
+        if(user(entitySC).getEntity()){
+            who(SC_WHO).resolveAliceDocs(numRequests);
+        }
         numRequests = numRequests + 1;
     }
-    
+
+    function getNumRequests() public onlyOwner() returns(uint256) {
+        return numRequests;
+    }   
+
     function obtainRequests(uint256 _identifier) public view onlyOwner() returns(address alice_address, address entityReq) {
         if(!requests[_identifier].resolved){
             return (requests[_identifier].alice_address, requests[_identifier].entity);
@@ -108,7 +124,7 @@ contract who{
     }
     
     modifier onlyOwner(){
-        require(msg.sender == owner, "L'adresa que ha realitzat la crida no te els permissos de propietat.");
+        require(msg.sender == owner || msg.sender == SC_WHO, "L'adresa que ha realitzat la crida no te els permissos de propietat.");
         _;
     }
     
@@ -171,6 +187,7 @@ contract user{
 
     address sc_adr;
     address owner;
+    address whoSC_Addr;
     bool entity;
     uint256 numRequests = 0;
     
@@ -192,9 +209,10 @@ contract user{
         string verifyingKey;
     }
     
-    constructor(address _owner, string memory  _pubKey) {
+    constructor(address _owner, string memory  _pubKey, address _whoSC_Addr) {
         owner = _owner;
         sc_adr = address(uint160(address(this)));
+        whoSC_Addr = _whoSC_Addr;
         pubKey = _pubKey;
         entity = false;
     }
@@ -290,25 +308,31 @@ contract user{
         return entity;
     }
     
-    function newSol(address _entityAdr) public {
+    function newSol(address _entityAdr) public onlyWHO() {
         requests[numRequests].entity_address = _entityAdr;
         requests[numRequests].resolved = false;
         numRequests = numRequests + 1;
     }
     
+    function getNumRequests() public onlyOwner() returns(uint256) {
+        return numRequests;
+    }
+
     function obtainRequests(uint256 _identifier) public view onlyOwner() returns(address entityReq) {
         if(!requests[_identifier].resolved){
             return (requests[_identifier].entity_address);
         }
     }
+    
 
-    modifier onlyOwner(/*address _owner*/){
+    modifier onlyOwner(){
         require(msg.sender == owner, "L'adresa que ha realitzat la crida no te els permissos de propietat.");
         _;
     }
     
     modifier onlyWHO(){
-        require(msg.sender == 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4, "L'adresa que ha realitzat la crida no te els permissos de propietat.");
+        //address SCWHO = who(0x5B38Da6a701c568545dCfcB03FcB875f56beddC4).getWHO_sc_address();
+        require(msg.sender == whoSC_Addr, "L'adresa que ha realitzat la crida no te els permissos de propietat.");
         _;
     }
 }

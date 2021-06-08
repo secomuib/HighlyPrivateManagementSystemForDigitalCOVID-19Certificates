@@ -10,13 +10,8 @@ import user from '../ethereum/user';
 import { convertToObject } from 'typescript';
 import '../pages/estils.css';
 
-
-
-
 class LlistatDocuments extends Component {
   
-
-
   constructor(props) {
     super(props)
     this.state = {
@@ -290,8 +285,6 @@ verDocumento(){
               </Table.Cell>
           </Table.Row>
       );
-    
-
     }
 }
 

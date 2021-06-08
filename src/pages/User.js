@@ -5,6 +5,7 @@ import web3 from '../ethereum/web3';
 import Swal from 'sweetalert2';
 import { Form, Divider, Button, Message, Segment, Input, Dimmer, Loader, Table, Icon } from 'semantic-ui-react';
 import LlistatDocuments from '../components/LlistatDocuments';
+import LlistatSolicituds from '../components/LlistatSolicituds';
 import axios from 'axios';
 
 
@@ -16,6 +17,7 @@ class User extends Component {
     this.state = {
       address: '',
       addressEnt: '',
+      addressUsuExt: '',
       ipfsHash: [],
       extIPFSHash: [],
       docHash: '',
@@ -23,6 +25,7 @@ class User extends Component {
       entidad: false,
       kfrags0:'',
       alices_verifying_key:'',
+      Docsrequests: [],
       loading: false,
       loadingPage: true,
       errorMessageAlta: '',
@@ -110,6 +113,14 @@ class User extends Component {
       });
     }
   };
+
+  //Funció per a sol·licitar un certificat a un usuari extern
+  requestDoc = async event => {
+    event.preventDefault();
+    const accounts = await web3.eth.getAccounts();
+    console.log('address ent: ' + this.state.addressEnt);
+    await who.methods.getAliceDocs(this.state.addressUsuExt, accounts[0]).send({from: accounts[0]});
+  }
 
   componentDidMount = async () => {
     try {
@@ -239,8 +250,22 @@ class User extends Component {
           );
 
           const entidad = await instance.methods.getEntity().call({from: accounts[0]});
+          console.log(entidad)
+          if(!entidad){
+            const NumRequests = await instance.methods.getNumRequests().call({from: accounts[0]});
 
-          
+            const requests = await Promise.all(
+                Array(parseInt(NumRequests))
+                    .fill()
+                    .map((delivery, index) => {
+                      return instance.methods.obtainRequests(index).call({from: accounts[0]});
+                    })
+              );
+            console.log(requests);
+            this.setState({
+              Docsrequests: requests
+            })
+            }
 
           /*if (entidad === true && (await instance.methods.lengthExtDocArray().call({from: accounts[0]})>0)) {
             console.log(await instance.methods.getExtDocs(0).call({from: accounts[0]}));
@@ -255,6 +280,7 @@ class User extends Component {
             ipfsHash: hash,
             extIPFSHash: extHash,
             entidad: entidad
+            
           });
           console.log('Entidad: ' + this.state.entidad);
         };
@@ -330,6 +356,26 @@ renderDeliveryRows() {
       );
     });
   };
+  renderSolicituds(){
+    var solicituds;
+
+    solicituds = this.state.Docsrequests;
+    console.log("Solicituds "+ solicituds);
+
+    return solicituds.map((delivery, index) => {
+      console.log(solicituds[index]);
+        if(solicituds[index] !=="0x0000000000000000000000000000000000000000"){
+            return (
+              <LlistatSolicituds
+                  key={index}
+                  id={index}
+                  sol_Addr_Bob={solicituds[index]}
+              />
+            );
+          }
+      
+    });   
+  };
 
   render() {
     // Loading
@@ -366,14 +412,6 @@ renderDeliveryRows() {
             </Table.Header>
             <Table.Body>{this.renderExternalRows()}</Table.Body>
           </Table>
-
-          <Divider horizontal>
-            <h3 style={{ textAlign: "center" }}>
-              <Icon name='comment alternate outline icon' circular />
-                &nbsp; Solicitar documentos &nbsp;
-              <Icon name='comment alternate outline icon' circular />
-            </h3>
-          </Divider>
 
         </div>)
           :
@@ -444,6 +482,47 @@ renderDeliveryRows() {
               </div>)}
             </Form>
           </div>)}
+
+        <div>
+        
+        <Divider horizontal>
+            <h3 style={{ textAlign: "center" }}>
+              <Icon name='comment alternate outline icon' circular />
+                &nbsp; Solicitar documentos &nbsp;
+              <Icon name='comment alternate outline icon' circular />
+            </h3>
+          </Divider>
+
+          <Form onSubmit={this.requestDoc} error={!!this.state.errorMessageAlta}>
+
+              <Form.Field>
+                <label style={{ fontSize: '15px' }}>Dirección Ethereum del propietario del documento:</label>
+                <Input
+                  value={this.state.addressUsuExt}
+                  onChange={event => this.setState({ addressUsuExt: event.target.value })}
+                />
+              </Form.Field>
+            <Button color='blue' style={{ marginBottom: '20px' }} size='large' onClick={() => this.requestDoc} enable loading={this.state.loading}>
+              Enviar solicitud
+            </Button>
+          </Form>
+
+          <h3><Icon name="check icon" ></Icon>Solicitud de documentos: </h3>
+              <Table fixed>
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.HeaderCell style={{ width: 90}}>#</Table.HeaderCell>
+                            <Table.HeaderCell style={{width: 300}, {fontSize:'15px'}}>Dirección del usuario solicitante</Table.HeaderCell>
+                            <Table.HeaderCell> Introduzca el hash a enviar</Table.HeaderCell>
+                            <Table.HeaderCell style={{ width: 100}}> </Table.HeaderCell>
+                            <Table.HeaderCell style={{ width: 100}}> </Table.HeaderCell>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body >{this.renderSolicituds()}</Table.Body>
+                </Table>
+          <h1></h1>
+
+        </div>
       </div>
     );
   }
