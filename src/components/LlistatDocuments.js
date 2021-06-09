@@ -267,12 +267,20 @@ verDocumento(){
   }*/
 
 
+  /*
+  <Table.Row>
+                      <Table.HeaderCell style={{ width: 90 }}>#</Table.HeaderCell>
+                      <Table.HeaderCell style={{ width: 300, textAlign: "center" }}>Hash documento IPFS</Table.HeaderCell>
+                      <Table.HeaderCell style={{ width: 300 }}></Table.HeaderCell>
+                    </Table.Row>
+  */
+
   render() {
      return (
           <Table.Row>            
-              <Table.Cell style={{ width: 90}}>{this.props.id+1}</Table.Cell>
-              <Table.Cell style={{ textAlign: "center"}}>{this.props.delivery}</Table.Cell>
-              <Table.Cell style={{textAlign: "center"}}>
+              <Table.Cell style={{ width: 90, textAlign: "center"}}>{this.props.id+1}</Table.Cell>
+              <Table.Cell style={{ width: 700}}>{this.props.delivery}</Table.Cell>
+              <Table.Cell style={{width:300}}>
                   
                     <Button animated='vertical' color='blue' onClick={this.onView}>
                       <Button.Content hidden>View</Button.Content>

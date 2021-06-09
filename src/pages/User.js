@@ -3,7 +3,7 @@ import who from '../ethereum/who';
 import user from '../ethereum/user';
 import web3 from '../ethereum/web3';
 import Swal from 'sweetalert2';
-import { Form, Divider, Button, Message, Segment, Input, Dimmer, Loader, Table, Icon } from 'semantic-ui-react';
+import { Form, Divider, Button, Message, Segment, Input, Dimmer, Loader, Table, Icon, Grid } from 'semantic-ui-react';
 import LlistatDocuments from '../components/LlistatDocuments';
 import LlistatSolicituds from '../components/LlistatSolicituds';
 import axios from 'axios';
@@ -240,6 +240,11 @@ class User extends Component {
 
           const numExtDoc = await instance.methods.lengthExtDocArray().call({from: accounts[0]});
           console.log('numExtDoc ' + numExtDoc)
+          if(numExtDoc>=1){
+            this.setState({
+              externalDocs: true
+            });
+          }
           const extHash = await Promise.all(
             Array(parseInt(numExtDoc))
               .fill()
@@ -397,7 +402,7 @@ renderDeliveryRows() {
           <Divider horizontal>
             <h3 style={{ textAlign: "center" }}>
               <Icon name='file alternate outline icon' circular />
-                &nbsp; Documentos recibidos &nbsp;
+                &nbsp; Certificados recibidos &nbsp;
               <Icon name='file alternate outline icon' circular />
             </h3>
           </Divider>
@@ -405,9 +410,9 @@ renderDeliveryRows() {
           <Table fixed>
             <Table.Header>
               <Table.Row>
-                <Table.HeaderCell style={{ width: 90 }, { fontSize: '15px' }}>#</Table.HeaderCell>
-                <Table.HeaderCell style={{ width: 300, textAlign: "center" }, { fontSize: '15px' }}>Hash documento IPFS</Table.HeaderCell>
-                <Table.HeaderCell style={{ width: 300 }}></Table.HeaderCell>
+                  <Table.HeaderCell style={{ width: 90, textAlign: "center"}}>#</Table.HeaderCell>
+                  <Table.HeaderCell style={{ width: 700}}>Hash documento IPFS</Table.HeaderCell>
+                  <Table.HeaderCell style={{ width: 300 }}></Table.HeaderCell>
               </Table.Row>
             </Table.Header>
             <Table.Body>{this.renderExternalRows()}</Table.Body>
@@ -419,18 +424,18 @@ renderDeliveryRows() {
 
             <Divider horizontal>
               <h3 style={{ textAlign: "center" }}>
-                <Icon name='folder open outline icon' circular />
+                <Icon name='file alternate outline icon' circular />
                 &nbsp; Mis certificados &nbsp;
-              <Icon name='folder open outline icon' circular />
+              <Icon name='file alternate outline icon' circular />
               </h3>
             </Divider>
             <Table fixed>
               <Table.Header>
-                <Table.Row>
-                  <Table.HeaderCell style={{ width: 90 }, { fontSize: '15px' }}>#</Table.HeaderCell>
-                  <Table.HeaderCell style={{ width: 300, textAlign: "center" }, { fontSize: '15px' }}>Hash documento IPFS</Table.HeaderCell>
-                  <Table.HeaderCell style={{ width: 300 }, { fontSize: '15px' }}></Table.HeaderCell>
-                </Table.Row>
+              <Table.Row>
+              <Table.HeaderCell style={{ width: 90, textAlign: "center"}}>#</Table.HeaderCell>
+                  <Table.HeaderCell style={{ width: 700}}>Hash documento IPFS</Table.HeaderCell>
+                  <Table.HeaderCell style={{ width: 300 }}></Table.HeaderCell>
+                    </Table.Row>
               </Table.Header>
               <Table.Body>{this.renderDeliveryRows()}</Table.Body>
             </Table>
@@ -461,18 +466,24 @@ renderDeliveryRows() {
 
               <Message error header="Error" content={this.state.errorMessageAlta} />
 
-              <Button color='blue' style={{ marginBottom: '20px' }} size='large' onClick={() => this.sendDoc} enable loading={this.state.loading}>
+              <Button color='blue' size='large' onClick={() => this.sendDoc} enable loading={this.state.loading}>
                 Enviar documento
           </Button>
 
               {this.state.externalDocs ? (<div>
-                <h3>Documentos recibidos</h3>
+                <Divider horizontal>
+                  <h3 style={{ textAlign: "center" }}>
+                    <Icon name='file alternate outline icon' circular />
+                      &nbsp; Certificados externos &nbsp;
+                    <Icon name='file alternate outline icon' circular />
+                  </h3>
+                </Divider>
                 <Table fixed>
                   <Table.Header>
                     <Table.Row>
-                      <Table.HeaderCell style={{ width: 90 }}>#</Table.HeaderCell>
-                      <Table.HeaderCell style={{ width: 300, textAlign: "center" }}>Hash documento IPFS</Table.HeaderCell>
-                      <Table.HeaderCell style={{ width: 300 }}></Table.HeaderCell>
+                    <Table.HeaderCell style={{ width: 90, textAlign: "center" }}>#</Table.HeaderCell>
+                  <Table.HeaderCell style={{ width: 700}}>Hash documento IPFS</Table.HeaderCell>
+                  <Table.HeaderCell style={{ width: 300 }}></Table.HeaderCell>
                     </Table.Row>
                   </Table.Header>
                   <Table.Body>{this.renderExternalRows()}</Table.Body>
@@ -481,47 +492,46 @@ renderDeliveryRows() {
 
               </div>)}
             </Form>
-          </div>)}
-
-        <div>
-        
-        <Divider horizontal>
+            
+          <Divider horizontal clearing>
             <h3 style={{ textAlign: "center" }}>
               <Icon name='comment alternate outline icon' circular />
-                &nbsp; Solicitar documentos &nbsp;
+                &nbsp; Solicitudes &nbsp;
               <Icon name='comment alternate outline icon' circular />
             </h3>
           </Divider>
-
-          <Form onSubmit={this.requestDoc} error={!!this.state.errorMessageAlta}>
-
-              <Form.Field>
-                <label style={{ fontSize: '15px' }}>Dirección Ethereum del propietario del documento:</label>
-                <Input
-                  value={this.state.addressUsuExt}
-                  onChange={event => this.setState({ addressUsuExt: event.target.value })}
-                />
-              </Form.Field>
-            <Button color='blue' style={{ marginBottom: '20px' }} size='large' onClick={() => this.requestDoc} enable loading={this.state.loading}>
-              Enviar solicitud
-            </Button>
-          </Form>
-
-          <h3><Icon name="check icon" ></Icon>Solicitud de documentos: </h3>
+            <h3><Icon name="check icon" ></Icon> &nbsp; &nbsp; Solicitudes recibidas: </h3>
               <Table fixed>
                     <Table.Header>
                         <Table.Row>
                             <Table.HeaderCell style={{ width: 90}}>#</Table.HeaderCell>
                             <Table.HeaderCell style={{width: 300}, {fontSize:'15px'}}>Dirección del usuario solicitante</Table.HeaderCell>
-                            <Table.HeaderCell> Introduzca el hash a enviar</Table.HeaderCell>
+                            <Table.HeaderCell> Hash del documento a enviar</Table.HeaderCell>
                             <Table.HeaderCell style={{ width: 100}}> </Table.HeaderCell>
                             <Table.HeaderCell style={{ width: 100}}> </Table.HeaderCell>
                         </Table.Row>
                     </Table.Header>
                     <Table.Body >{this.renderSolicituds()}</Table.Body>
                 </Table>
-          <h1></h1>
+          </div>
+          )}
 
+        <div>
+        
+          <h3><Icon name="question" style={{ marginTop: '20px' }}></Icon>&nbsp; &nbsp; Solicitar documentos: </h3>
+          
+          <Form onSubmit={this.requestDoc} error={!!this.state.errorMessageAlta}>
+              <Form.Field>
+                <label style={{ fontSize: '15px' }}>Dirección Ethereum del propietario del documento:</label>
+                <Input
+                  value={this.state.addressUsuExt} style={{ marginBottom: '20px' }}
+                  onChange={event => this.setState({ addressUsuExt: event.target.value })}
+                />
+              </Form.Field>
+            <Button color='blue' style={{ marginBottom: '20px'}} size='large' onClick={() => this.requestDoc} enable loading={this.state.loading}>
+              Enviar solicitud
+            </Button>
+            </Form>
         </div>
       </div>
     );

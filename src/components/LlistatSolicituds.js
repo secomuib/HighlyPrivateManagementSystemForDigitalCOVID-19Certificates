@@ -41,6 +41,7 @@ class LlistatSolicituds extends Component {
     console.log(this.state.hashDoc);
 
     const accounts = await web3.eth.getAccounts();
+    console.log("accounts");
     const scAddr = await who.methods.getUserSC(bobAddr).call({from: accounts[0]});
     console.log('scAddr ' + scAddr);
 
@@ -73,14 +74,17 @@ class LlistatSolicituds extends Component {
         alices_verifying_key: result.alices_verifying_key
       });
     })
-    const instance = await user(this.state.address);
-    console.log('Hash: ' + this.state.docHash);
-    const index = await instance.methods.getIndexDoc(this.state.docHash).call({from: accounts[0]});
+
+    var address = await who.methods.userSC(accounts[0]).call();
+    const instance = await user(address);
+    console.log('Hash: ' + this.state.hashDoc);
+    const index = await instance.methods.getIndexDoc(this.state.hashDoc).call({from: accounts[0]});
     console.log('Index: ' + index);
     const capsule = await instance.methods.getDocsCapsule(index).call({from: accounts[0]});
     console.log('capsule '+ capsule);
     const pubKeyUser =  await instance.methods.getPubKey().call();
     console.log('pubKeyUser ' + pubKeyUser);
+    console.log('docHas: ' + this.state.hashDoc);
     entityInstance.methods.newExtDoc(this.state.hashDoc, pubKeyUser, capsule, this.state.kfrags0, this.state.alices_verifying_key).send({ from: accounts[0] });
     console.log('kfrags[0] ' + this.state.kfrags0)
     
@@ -98,7 +102,7 @@ class LlistatSolicituds extends Component {
                 <Table.Cell style={{ width:300, textAlign: "center"}}>{this.props.sol_Addr_Alice}</Table.Cell>
                 <Table.Cell style={{ width: 90, textAlign: "center"}}>
                     
-                      <Button  color='blue' onClick={this.acceptUsuari}>
+                      <Button  color='blue' onClick={this.accept()}>
                         <Button.Content>
                           <Icon name='check' />
                         </Button.Content>

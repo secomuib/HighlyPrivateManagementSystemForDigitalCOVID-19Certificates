@@ -81,7 +81,7 @@ contract who{
         return Lab[adr_Lab].sc_adr;
     }
     
-    function getUserSC(address adr_User) public view onlyOwner() returns(address){
+    function getUserSC(address adr_User) public view returns(address){
         return userSC[adr_User];
     }
     
@@ -105,7 +105,7 @@ contract who{
         numRequests = numRequests + 1;
     }
 
-    function getNumRequests() public onlyOwner() returns(uint256) {
+    function getNumRequests() public view onlyOwner() returns(uint256) {
         return numRequests;
     }   
 
@@ -121,6 +121,10 @@ contract who{
         address entitat = requests[_identifier].entity;
         requests[_identifier].resolved = true;
         user(aliceSC).newSol(entitat);
+    }
+
+    function denySol(uint256 _identifier) public onlyOwner(){
+        requests[_identifier].resolved = true;
     }
     
     modifier onlyOwner(){
@@ -139,6 +143,7 @@ contract lab{
     address payable  owner;
     address scAddress;
     string hashA;
+    
     
     constructor(address payable _lab){
         owner = _lab;
@@ -314,7 +319,7 @@ contract user{
         numRequests = numRequests + 1;
     }
     
-    function getNumRequests() public onlyOwner() returns(uint256) {
+    function getNumRequests() public view onlyOwner() returns(uint256) {
         return numRequests;
     }
 
@@ -322,6 +327,10 @@ contract user{
         if(!requests[_identifier].resolved){
             return (requests[_identifier].entity_address);
         }
+    }
+
+    function resolveSol(uint256 _identifier) public onlyOwner(){
+        requests[_identifier].resolved = true;
     }
     
 
@@ -331,8 +340,13 @@ contract user{
     }
     
     modifier onlyWHO(){
-        //address SCWHO = who(0x5B38Da6a701c568545dCfcB03FcB875f56beddC4).getWHO_sc_address();
         require(msg.sender == whoSC_Addr, "L'adresa que ha realitzat la crida no te els permissos de propietat.");
+        _;
+    }
+
+    modifier onlyLab(){
+        
+        require(who(whoSC_Addr).getLabState(msg.sender), "L'adresa que ha realitzat la crida no es correspon amb cap laboratori fiable.");
         _;
     }
 }
