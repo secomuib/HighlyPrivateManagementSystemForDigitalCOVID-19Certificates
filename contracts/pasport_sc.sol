@@ -238,7 +238,7 @@ contract user{
         pubKey = _pubKey;
     }
     
-    function newDoc(string memory _hash, string memory _capsule)public{
+    function newDoc(string memory _hash, string memory _capsule) public /*onlyLab()*/{
         uint256 index= extDocs.length;
         indexDocs[_hash] = index;
         capsule.push(_capsule);
@@ -274,28 +274,10 @@ contract user{
         return extDocs[_index];
     }
     
-    /*function getExtPubKey(string memory _hash) public view returns (string memory){
-        uint256 index = index_extDocs[_hash];
-        return userPubKey[index];
-    }*/
-
-    /*function getExtCapsule(string memory _hash) public onlyOwner() view returns(string memory) {
-        uint256 index = index_extDocs[_hash];
-        return extCapsule[index];
-    }
-    function getExtKfrags(string memory _hash) public onlyOwner() view returns(string memory) {
-        uint256 index = index_extDocs[_hash];
-        return extKfrags[index];
-    }
-*/
-
     function getExtInfo(string memory _hash) public view onlyOwner() returns (string memory, string memory, string memory, string memory){
         return (kfrag[_hash].extPubKey, kfrag[_hash].capsule, kfrag[_hash].kfrag0, kfrag[_hash].verifyingKey);
     }
-//No s'utilitza es pot eliminar
-    function getContractAddress()public view onlyOwner() returns(address){
-        return sc_adr;
-    }
+
 
     function lengthDocArray() public view onlyOwner() returns(uint){
         return docs.length;
@@ -344,9 +326,9 @@ contract user{
         _;
     }
 
-    modifier onlyLab(){
+   /* modifier onlyLab(){
         
         require(who(whoSC_Addr).getLabState(msg.sender), "L'adresa que ha realitzat la crida no es correspon amb cap laboratori fiable.");
         _;
-    }
+    }*/
 }

@@ -89,9 +89,8 @@ class Lab extends Component {
         console.log(stringAlicePubKey)
         //const aliceBuffer = Buffer.from(alice_PubKey, 'utf-8')
         //console.log((aliceBuffer));
-
         let plaintext = JSON.stringify({
-                nombre: this.state.Nombre,
+                nombre: this.state.nombre,
                 apellidos: this.state.apellidos,
                 prueba: this.state.prueba,
                 resultado: this.state.resultado,
@@ -105,7 +104,7 @@ class Lab extends Component {
         console.log(plaintext_Base64);
         this.setState({ plaintext: plaintext_Base64 })
         console.log("JSON: "+ this.state.plaintext);
-
+        console.log(plaintext.nombre);
       await fetch('/encryption', {
         method: 'POST',
         body: JSON.stringify({
@@ -121,7 +120,7 @@ class Lab extends Component {
         //lab_instance.methods.carregaDocument(aliceSCAddress, hashDoc).send({from:accounts[0]});
         console.log(result.capsule)
         console.log(result.hash)
-      })
+      }).catch((e) => {console.log(e.message)})
 
 
         

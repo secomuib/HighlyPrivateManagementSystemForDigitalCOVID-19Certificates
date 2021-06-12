@@ -19,22 +19,27 @@ class Who extends Component {
     numLabs: '',
     ArrayLabs: [],
     Docsrequests: [],
-    loading: false,
     loadingPage: true
   };
 
   prova = async event =>{
     event.preventDefault();
-    this.setState({ loading: true, errorMessageAlta: '' });
-    
-    console.log("Funcio time")
-    axios.get('/keysCreation').then((response) =>{
-      const {data} = (response);
-      console.log('Data ' + data);
+    try{
+      this.setState({ loading: true, errorMessageAlta: '' });
       
-      const myStorage = window.localStorage;
-      myStorage.setItem('claus alice', JSON.stringify(data));
-    });
+      console.log("Funcio time")
+      axios.get('/keysCreation').then((response) =>{
+        const {data} = (response);
+        console.log('Data ' + data);
+        
+        const myStorage = window.localStorage;
+        myStorage.setItem('claus alice', JSON.stringify(data));
+      });
+    }catch(err){
+      this.setState({errorMessage:err.message});
+    }finally {
+      this.setState({ loading: false });
+    }
   }
 
   //Funció per a donar d'alta un nou Laboratori
@@ -50,7 +55,7 @@ class Who extends Component {
         console.log(labsCount);
 
         //Refresc de la pàgina
-        window.location.reload();
+        //window.location.reload();
     } catch (err) {
         this.setState({ errorMessageAlta: err.message });
     } finally {
@@ -73,7 +78,7 @@ class Who extends Component {
         await who.methods.deleteLab(this.state.labBaja, scAddr).send({from: accounts[0]});
 
         //Refresc de la pàgina
-        window.location.reload();
+        //window.location.reload();
 
     } catch (err) {
         this.setState({ errorMessage: err.message });
@@ -95,7 +100,7 @@ class Who extends Component {
         await who.methods.Entity(true, this.state.entidadAlta).send({from: accounts[0]});
 
         //Refresc de la pàgina
-        window.location.reload();
+        //window.location.reload();
 
     } catch (err) {
         this.setState({ errorMessage: err.message });

@@ -21,6 +21,7 @@ class LlistatDocuments extends Component {
       nacimiento: '', 
       prueba: '', 
       resultado: '',
+      result: [],
       expedicion:'',
       validez: '',
       entitat: '',
@@ -34,134 +35,147 @@ class LlistatDocuments extends Component {
 
 
   componentDidMount = async () => {
+    try{
     const entitat = this.props.entitat;//({entitat}) => <h1>{entitat}</h1>
     console.log('Entitat component: '+entitat)
     this.setState({
       entitat: this.props.entitat
     });
     console.log(this.state.entitat);
+    }catch(err){
+      this.setState({errorMessage:err.message});
+    }finally {
+      this.setState({ loading: false });
+    }
   }
 
  onView = async () => {
-  console.log(this.props.id)
+  try{ 
+        console.log(this.props.id)
 
-  this.setState({
-    view: true
-  });
-
-
-  const accounts = await web3.eth.getAccounts();
-  var address = await who.methods.userSC(accounts[0]).call();
-  var instance = await user(address);
-  console.log('hola')
-  console.log(this.state.entitat);
-
-  if(this.props.entitat == false){
-    const capsule = await  instance.methods.getDocsCapsule(this.props.id).call({from: accounts[0]});
-    console.log('Capsule: '+ capsule);
-    
-    const myStorage = window.localStorage;
-    
-    await fetch('/decryption', {
-      method: 'POST',
-      body: JSON.stringify({
-        capsule: capsule,
-        private_key: myStorage.getItem('clau privada usuari ' + accounts),
-        public_key: myStorage.getItem('clau publica usuari ' + accounts),
-        hashipfs: this.props.delivery  
-      }),
-      headers:{
-        'Content-type': 'application/json',
-      }
-    }).then(response => response.json()
-    ).then(result=> {
-        console.log(result)
-        console.log(typeof(result))
       this.setState({
-        nombre: result.cleartext.nombre,
-        apellidos: result.cleartext.apellidos, 
-        nacimiento: result.cleartext.nacimiento,
-        prueba: result.cleartext.prueba, 
-        resultado: result.cleartext.resultado,
-        expedicion:result.cleartext.fechaExpedicion,
-        validez: result.cleartext.periodoValidez
+        view: true
       });
-      this.verDocumento()
-    })
 
-  }else{
-    const hashIPFS = await instance.methods.getExtDocs(this.props.id).call();
-    console.log('Hash external doc: '+hashIPFS);
 
-    const extInfo = await instance.methods.getExtInfo(hashIPFS).call({from: accounts[0]});
-    console.log('extInfo: ' +extInfo)
-    const alices_public_key = extInfo[0];
-    console.log('alices_public_key: ' +alices_public_key);
-    const capsule = extInfo[1];
-    console.log('capsule: ' + capsule);
-    const kfrags0 = extInfo[2];
-    console.log('kfrags0: ' + kfrags0);
-    const alices_verifying_key = extInfo[3];
-    console.log('alices_verifying_key: ' + alices_verifying_key);
+      const accounts = await web3.eth.getAccounts();
+      var address = await who.methods.userSC(accounts[0]).call();
+      var instance = await user(address);
+      console.log('hola')
+      console.log(this.state.entitat);
 
-    const myStorage = window.localStorage;
-    
-    await fetch('/ursulas', {
-      method: 'POST',
-      body: JSON.stringify({
-        capsule: capsule,
-        kfrags: kfrags0,
-        alices_public_key: alices_public_key,
-        alices_verifying_key: alices_verifying_key,
-        bobs_public_key: myStorage.getItem('clau publica usuari ' + accounts),
-        bobs_private_key: myStorage.getItem('clau privada usuari ' + accounts),
-        hashipfs: hashIPFS
-      }),
-      headers:{
-        'Content-type': 'application/json',
-      }
-    }).then(response => response.json()
-    ).then(result=> {
-      console.log('Result cfrags' + result.cfrags)
-      console.log('Result capsule' + result.capsule)
+      if(this.props.entitat == false){
+        const capsule = await  instance.methods.getDocsCapsule(this.props.id).call({from: accounts[0]});
+        console.log('Capsule: '+ capsule);
+        
+        const myStorage = window.localStorage;
+        
+        await fetch('/decryption', {
+          method: 'POST',
+          body: JSON.stringify({
+            capsule: capsule,
+            private_key: myStorage.getItem('clau privada usuari ' + accounts),
+            public_key: myStorage.getItem('clau publica usuari ' + accounts),
+            hashipfs: this.props.delivery  
+          }),
+          headers:{
+            'Content-type': 'application/json',
+          }
+        }).then((response) => {
+             return response.json()
+        }).then(result=> {
+          this.setState({
+            nombre: result.nombre,
+            apellidos: result.apellidos, 
+            nacimiento: result.nacimiento,
+            prueba: result.prueba, 
+            resultado: result.resultado,
+            expedicion:result.fechaExpedicion,
+            validez: result.periodoValidez
+          });
+          
+          this.verDocumento()
+        })
+
+      }else{
+        console.log('ENTITAT')
+        const hashIPFS = await instance.methods.getExtDocs(this.props.id).call({from: accounts[0]});
+        console.log('Hash external doc: '+hashIPFS);
+
+        const extInfo = await instance.methods.getExtInfo(hashIPFS).call({from: accounts[0]});
+        console.log('extInfo: ' +extInfo)
+        const alices_public_key = extInfo[0];
+        console.log('alices_public_key: ' +alices_public_key);
+        const capsule = extInfo[1];
+        console.log('capsule: ' + capsule);
+        const kfrags0 = extInfo[2];
+        console.log('kfrags0: ' + kfrags0);
+        const alices_verifying_key = extInfo[3];
+        console.log('alices_verifying_key: ' + alices_verifying_key);
+
+        const myStorage = window.localStorage;
+        
+        await fetch('/ursulas', {
+          method: 'POST',
+          body: JSON.stringify({
+            capsule: capsule,
+            kfrags: kfrags0,
+            alices_public_key: alices_public_key,
+            alices_verifying_key: alices_verifying_key,
+            bobs_public_key: myStorage.getItem('clau publica usuari ' + accounts),
+            bobs_private_key: myStorage.getItem('clau privada usuari ' + accounts),
+            hashipfs: hashIPFS
+          }),
+          headers:{
+            'Content-type': 'application/json',
+          }
+        }).then(response => response.json()
+        ).then(result=> {
+          console.log('Result cfrags' + result.cfrags)
+          console.log('Result capsule' + result.capsule)
+          
+          this.setState({
+            bob_capsule: result.capsule,
+            bob_cfrags: result.cfrags
+          })
+
+          //console.log('aliceSCAddress' + aliceSCAddress)
+          //lab_instance.methods.carregaDocument(aliceSCAddress, result.hash, result.capsule).send({from: accounts[0]});
+          //lab_instance.methods.carregaDocument(aliceSCAddress, hashDoc).send({from:accounts[0]});
+          //console.log(result.capsule)
+          //console.log(result.hash)
+        }).catch((e) => {console.log(e.message)})
+        console.log("prova cfrags: " + this.state.cfrags);
+
+        /*await fetch('/decryption', {
+          method: 'POST',
+          body: JSON.stringify({
+            capsule: this.state.bob_capsule,
+            cfrags: this.state.bob_cfrags,
+            private_key: myStorage.getItem('clau privada usuari ' + accounts),
+            public_key: myStorage.getItem('clau publica usuari ' + accounts),
+            hashipfs: hashIPFS  
+          }),
+          headers:{
+            'Content-type': 'application/json',
+          }
+        }).then(response => response.json()
+        ).then(result=> {
+          console.log(result)
+          console.log('Result ' + result.cleartext)
+          console.log('Nom ' + result.cleartext.nombre)
       
-      this.setState({
-        bob_capsule: result.capsule,
-        bob_cfrags: result.cfrags
-      })
-
-      //console.log('aliceSCAddress' + aliceSCAddress)
-      //lab_instance.methods.carregaDocument(aliceSCAddress, result.hash, result.capsule).send({from: accounts[0]});
-      //lab_instance.methods.carregaDocument(aliceSCAddress, hashDoc).send({from:accounts[0]});
-      //console.log(result.capsule)
-      //console.log(result.hash)
-    })
-    console.log("prova cfrags: " + this.state.cfrags);
-
-    /*await fetch('/decryption', {
-      method: 'POST',
-      body: JSON.stringify({
-        capsule: this.state.bob_capsule,
-        cfrags: this.state.bob_cfrags,
-        private_key: myStorage.getItem('clau privada usuari ' + accounts),
-        public_key: myStorage.getItem('clau publica usuari ' + accounts),
-        hashipfs: hashIPFS  
-      }),
-      headers:{
-        'Content-type': 'application/json',
+          //console.log('aliceSCAddress' + aliceSCAddress)
+          //lab_instance.methods.carregaDocument(aliceSCAddress, result.hash, result.capsule).send({from: accounts[0]});
+          //lab_instance.methods.carregaDocument(aliceSCAddress, hashDoc).send({from:accounts[0]});
+          //console.log(result.capsule)
+          //console.log(result.hash)
+        })*/
       }
-    }).then(response => response.json()
-    ).then(result=> {
-      console.log(result)
-      console.log('Result ' + result.cleartext)
-      console.log('Nom ' + result.cleartext.nombre)
-  
-      //console.log('aliceSCAddress' + aliceSCAddress)
-      //lab_instance.methods.carregaDocument(aliceSCAddress, result.hash, result.capsule).send({from: accounts[0]});
-      //lab_instance.methods.carregaDocument(aliceSCAddress, hashDoc).send({from:accounts[0]});
-      //console.log(result.capsule)
-      //console.log(result.hash)
-    })*/
+  }catch(err){
+    this.setState({errorMessage:err.message});
+  }finally {
+    this.setState({ loading: false });
   }
   
 }
@@ -199,7 +213,7 @@ verDocumento(){
     if(result.isConfirmed){
       
     }
-  })
+  }).catch((e) => {console.log(e.message)})
 }
   /*
   fetch('https://ipfs.infura.io/ipfs/' + this.props.delivery)

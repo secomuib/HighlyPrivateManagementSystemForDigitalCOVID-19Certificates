@@ -35,91 +35,103 @@ class User extends Component {
 
   //Funció per a enviar un document des de l'usuari cap a una entitat fiable
   sendDoc = async event => {
-    if (this.state.enviar == false) {
-      event.preventDefault();
-    }
-    this.setState({ loading: true, errorMessageAlta: '' });
-    try {
-      //COMPROVACIÓ QUE L'ADREÇA INTRODUÏDA PERTANY A UNA USUARI/ENTITAT FIABLE
-      const accounts = await web3.eth.getAccounts();
-      console.log('address ent: ' + this.state.addressEnt);
-      const scAddr = await who.methods.getUserSC(this.state.addressEnt).call({from: accounts[0]});
-      console.log('scAddr ' + scAddr);
-
-      let entityInstance = user(scAddr);
-
-      if (await entityInstance.methods.getEntity().call({from: accounts[0]}) === true) {
-        //Obtenim la clau pública de l'entitat a la qual li volem enviar el document
-        const pubKey_Entitat = await entityInstance.methods.getPubKey().call();
-        console.log('pubKeyEntitat: ' + pubKey_Entitat);
-
-        //Creem la variable per a consultar la clau privada des del navegador
-        const myStorage = window.localStorage;
-
-        //Realitzam la petició de reencriptació a pyUmbral
-        await fetch('/reencryptAlice', {
-          method: 'POST',
-          body: JSON.stringify({
-            pubKey_Entitat: pubKey_Entitat,
-            private_key_Alice: myStorage.getItem('clau privada usuari ' + accounts),  
-          }),
-          headers:{
-            'Content-type': 'application/json',
-          }
-        }).then(response => response.json()
-        
-        ).then(result=> {
-          console.log('Result ' + result.kfrags0)
-          console.log('Result ' + result.alices_verifying_key)
-          this.setState({
-            kfrags0: result.kfrags0,
-            alices_verifying_key: result.alices_verifying_key
-          });
-        })
-        const instance = await user(this.state.address);
-        console.log('Hash: ' + this.state.docHash);
-        const index = await instance.methods.getIndexDoc(this.state.docHash).call({from: accounts[0]});
-        console.log('Index: ' + index);
-        const capsule = await instance.methods.getDocsCapsule(index).call({from: accounts[0]});
-        console.log('capsule '+ capsule);
-        const pubKeyUser =  await instance.methods.getPubKey().call();
-        console.log('pubKeyUser ' + pubKeyUser);
-        entityInstance.methods.newExtDoc(this.state.docHash, pubKeyUser, capsule, this.state.kfrags0, this.state.alices_verifying_key).send({ from: accounts[0] });
-        console.log('kfrags[0] ' + this.state.kfrags0)
-        //entityInstance.methods.newExtDoc(this.state.docHash).send({ from: accounts[0] });
-        //window.location.reload();
-      } else {
-        //En cas que l'adreça no es correspongui amb la de cap entitat verificada, s'avisa a l'usuari i s'acaba la transacció
-        Swal.fire({
-          title: 'La dirección introducida no se corresponde con la de ninguna entidad verificada.',
-          icon: 'warning',
-          showCloseButton: true,
-          confirmButtonText: 'Aceptar',
-          width: 600,
-          padding: '3em',
-          backdrop: `
-            left top
-            no-repeat
-          `
-        }).then((result) => {
-          if (result.isConfirmed) {
-
-          }
-        })
+    try{
+      if (this.state.enviar == false) {
+        event.preventDefault();
       }
-    } finally {
-      this.setState({
-        loading: false
-      });
+      this.setState({ loading: true, errorMessageAlta: '' });
+      try {
+        //COMPROVACIÓ QUE L'ADREÇA INTRODUÏDA PERTANY A UNA USUARI/ENTITAT FIABLE
+        const accounts = await web3.eth.getAccounts();
+        console.log('address ent: ' + this.state.addressEnt);
+        const scAddr = await who.methods.getUserSC(this.state.addressEnt).call({from: accounts[0]});
+        console.log('scAddr ' + scAddr);
+
+        let entityInstance = user(scAddr);
+
+        if (await entityInstance.methods.getEntity().call({from: accounts[0]}) === true) {
+          //Obtenim la clau pública de l'entitat a la qual li volem enviar el document
+          const pubKey_Entitat = await entityInstance.methods.getPubKey().call();
+          console.log('pubKeyEntitat: ' + pubKey_Entitat);
+
+          //Creem la variable per a consultar la clau privada des del navegador
+          const myStorage = window.localStorage;
+
+          //Realitzam la petició de reencriptació a pyUmbral
+          await fetch('/reencryptAlice', {
+            method: 'POST',
+            body: JSON.stringify({
+              pubKey_Entitat: pubKey_Entitat,
+              private_key_Alice: myStorage.getItem('clau privada usuari ' + accounts),  
+            }),
+            headers:{
+              'Content-type': 'application/json',
+            }
+          }).then(response => response.json()
+          
+          ).then(result=> {
+            console.log('Result ' + result.kfrags0)
+            console.log('Result ' + result.alices_verifying_key)
+            this.setState({
+              kfrags0: result.kfrags0,
+              alices_verifying_key: result.alices_verifying_key
+            });
+          })
+          const instance = await user(this.state.address);
+          console.log('Hash: ' + this.state.docHash);
+          const index = await instance.methods.getIndexDoc(this.state.docHash).call({from: accounts[0]});
+          console.log('Index: ' + index);
+          const capsule = await instance.methods.getDocsCapsule(index).call({from: accounts[0]});
+          console.log('capsule '+ capsule);
+          const pubKeyUser =  await instance.methods.getPubKey().call();
+          console.log('pubKeyUser ' + pubKeyUser);
+          entityInstance.methods.newExtDoc(this.state.docHash, pubKeyUser, capsule, this.state.kfrags0, this.state.alices_verifying_key).send({ from: accounts[0] });
+          console.log('kfrags[0] ' + this.state.kfrags0)
+          //entityInstance.methods.newExtDoc(this.state.docHash).send({ from: accounts[0] });
+          //window.location.reload();
+        } else {
+          //En cas que l'adreça no es correspongui amb la de cap entitat verificada, s'avisa a l'usuari i s'acaba la transacció
+          Swal.fire({
+            title: 'La dirección introducida no se corresponde con la de ninguna entidad verificada.',
+            icon: 'warning',
+            showCloseButton: true,
+            confirmButtonText: 'Aceptar',
+            width: 600,
+            padding: '3em',
+            backdrop: `
+              left top
+              no-repeat
+            `
+          }).then((result) => {
+            if (result.isConfirmed) {
+
+            }
+          })
+        }
+      } finally {
+        this.setState({
+          loading: false
+        });
+      }
+    }catch(err){
+      this.setState({errorMessage:err.message});
+    }finally {
+      this.setState({ loading: false });
     }
   };
 
   //Funció per a sol·licitar un certificat a un usuari extern
   requestDoc = async event => {
-    event.preventDefault();
-    const accounts = await web3.eth.getAccounts();
-    console.log('address ent: ' + this.state.addressEnt);
-    await who.methods.getAliceDocs(this.state.addressUsuExt, accounts[0]).send({from: accounts[0]});
+    try{
+      event.preventDefault();
+      const accounts = await web3.eth.getAccounts();
+      console.log('address ent: ' + this.state.addressEnt);
+      await who.methods.getAliceDocs(this.state.addressUsuExt, accounts[0]).send({from: accounts[0]});
+    }catch(err){
+      this.setState({errorMessage:err.message});
+    }finally {
+      this.setState({ loading: false });
+    }
   }
 
   componentDidMount = async () => {
@@ -140,7 +152,7 @@ class User extends Component {
           console.log(text.alices_public_key)
           address = who.methods.registerUser(accounts[0], text.alices_public_key).send({ from: accounts[0] });
           const myStorage = window.localStorage;
-          myStorage.setItem('clau privada usuari ' + accounts, text.alice_secret_key);
+          myStorage.setItem('clau privada usuari ' + accounts, text.alices_private_keyBytes);
           myStorage.setItem('clau publica usuari ' + accounts, text.alices_public_key);
          
          });
@@ -156,7 +168,7 @@ class User extends Component {
         var address = await who.methods.userSC(accounts[0]).call();
         instance = await user(address);
         console.log('Instance: ' + typeof (instance));
-
+        this.setState({ loadingPage: false })
       } else {
 
         instance = await user(address);
@@ -288,12 +300,15 @@ class User extends Component {
             
           });
           console.log('Entidad: ' + this.state.entidad);
+          this.setState({ loadingPage: false })
         };
       
 
-    } finally {
-      this.setState({ loadingPage: false })
-    }
+    }catch(err){
+      this.setState({errorMessage:err.message});
+    }finally {
+      this.setState({ loading: false });
+    } 
   }
 
   /*pubKey(data){
