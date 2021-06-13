@@ -59,7 +59,9 @@ class Who extends Component {
     } catch (err) {
         this.setState({ errorMessageAlta: err.message });
     } finally {
-        this.setState({ loading: false });
+        this.setState({ loading: false, 
+        labAlta: '', 
+        lab_name: '' });
     }
 
   };
@@ -83,7 +85,9 @@ class Who extends Component {
     } catch (err) {
         this.setState({ errorMessage: err.message });
     } finally {
-        this.setState({ loading: false });
+        this.setState({ loading: false,
+          labBaja: '' 
+          });
     }
   };
 
@@ -105,7 +109,8 @@ class Who extends Component {
     } catch (err) {
         this.setState({ errorMessage: err.message });
     } finally {
-        this.setState({ loading: false });
+        this.setState({ loading: false, 
+          entidadAlta: '' });
     }
   };
   
@@ -127,7 +132,8 @@ class Who extends Component {
     } catch (err) {
         this.setState({ errorMessage: err.message });
     } finally {
-        this.setState({ loading: false });
+        this.setState({ loading: false,
+          entidadBaja: '' });
     }
   };
 
@@ -293,7 +299,7 @@ class Who extends Component {
           </Form.Field>
           <Message error header = "Error" content={this.state.errorMessageAlta}/>
 
-          <Button color='green' style={{ marginBottom: '15px' }} size = 'large' onClick={() => this.altaLab} enable loading={this.state.loading}>
+          <Button color='green' style={{ marginBottom: '15px' }} size = 'large' onClick={() => this.altaLab} primary loading={this.state.loading}>
             Activar laboratorio
           </Button>
           </Form>
@@ -310,7 +316,7 @@ class Who extends Component {
             />
           </Form.Field>
 
-          <Button color='red' style={{ marginTop: '75px' }} size = 'large' onClick={() => this.bajaLab} enable loading={this.state.loading}>
+          <Button color='red' style={{ marginTop: '75px' }} size = 'large' onClick={() => this.bajaLab} primary loading={this.state.loading}>
             Desactivar laboratorio
           </Button>
         </Form>
@@ -344,7 +350,7 @@ class Who extends Component {
 
             <Message error header = "Error" content={this.state.errorMessageAlta}/>
 
-            <Button color='green' style={{ marginBottom: '10px' }} size = 'large' onClick={() => this.altaEntidad} enable loading={this.state.loading}>
+            <Button color='green' style={{ marginBottom: '10px' }} size = 'large' onClick={() => this.altaEntidad} primary loading={this.state.loading}>
               Habilitar entidad
             </Button>
           </Form>
@@ -363,7 +369,7 @@ class Who extends Component {
             </Form.Field>
             <Message error header = "Error" content={this.state.errorMessageAlta}/>
 
-            <Button color='red' style={{ marginBottom: '20px' }} size = 'large' onClick={() => this.bajaEntidad} enable loading={this.state.loading}>
+            <Button color='red' style={{ marginBottom: '20px' }} size = 'large' onClick={() => this.bajaEntidad} primary loading={this.state.loading}>
               Deshabilitar entidad
             </Button>
           </Form>

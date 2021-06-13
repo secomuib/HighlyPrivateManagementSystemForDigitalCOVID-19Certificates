@@ -27,6 +27,7 @@ class Lab extends Component {
       plaintext: [],
       EthAddress: '',
       ipfsHash: '',
+      capsule:'',
       address: '',
       alice_PubKey: '',
       loading: false,
@@ -37,7 +38,7 @@ class Lab extends Component {
 
   componentDidMount = async () => {
     try{
-        const accounts = await web3.eth.getAccounts();
+        /*const accounts = await web3.eth.getAccounts();
         const myStorage = window.localStorage;
         if(myStorage.getItem('claus laboratori ' + accounts) == null){
           axios.get('/keysCreation').then((response) =>{
@@ -46,7 +47,7 @@ class Lab extends Component {
             
             myStorage.setItem('claus laboratori ' + accounts, JSON.stringify(data));
           });
-        }
+        }*/
        
     }finally{
       this.setState({ loadingPage: false })
@@ -74,23 +75,24 @@ class Lab extends Component {
         console.log(address);
         let lab_instance = lab(address);
         console.log('lab instance ' +lab_instance);
-        const owner = await lab_instance.methods.getOwner().call();
-        console.log('owner: ' + owner);
+        //const owner = await lab_instance.methods.getOwner().call();
+        //console.log('owner: ' + owner);
 
+        //Consultem quina és l'adreça de l'SC de l'usuari al qual s'ha d'enviar el document
         console.log('Alice: '+this.state.EthAddress);
         const aliceSCAddress = await who.methods.userSC(this.state.EthAddress).call();
         console.log('Alice SC: ' + aliceSCAddress);
 
         let alice_instance = user(aliceSCAddress);
-
+        //Obtenim la clau pública de l'usuari, per a poder realitzar l'encriptació
         const alice_PubKey = await alice_instance.methods.getPubKey().call();
         var stringAlicePubKey = alice_PubKey.toString()
         console.log(typeof(stringAlicePubKey));
         console.log(stringAlicePubKey)
-        //const aliceBuffer = Buffer.from(alice_PubKey, 'utf-8')
-        //console.log((aliceBuffer));
+
+        //Generem un JSON de les dades que formaràn el certificat
         let plaintext = JSON.stringify({
-                nombre: this.state.nombre,
+                nombre: this.state.Nombre,
                 apellidos: this.state.apellidos,
                 prueba: this.state.prueba,
                 resultado: this.state.resultado,
@@ -100,11 +102,14 @@ class Lab extends Component {
         });
         console.log('PlainText: ' + plaintext)
         
+        //Codifiquem el certificat (JSON) a base64 per a poder enviar-lo al proxy per a realitzar l'encriptació
         let plaintext_Base64 = Buffer.from(plaintext).toString("base64")
         console.log(plaintext_Base64);
         this.setState({ plaintext: plaintext_Base64 })
         console.log("JSON: "+ this.state.plaintext);
         console.log(plaintext.nombre);
+
+      //Solicitem l'encriptació al proxy
       await fetch('/encryption', {
         method: 'POST',
         body: JSON.stringify({
@@ -116,11 +121,19 @@ class Lab extends Component {
       }).then(response => response.json()
       ).then(result=> {
         console.log('aliceSCAddress' + aliceSCAddress)
-        lab_instance.methods.carregaDocument(aliceSCAddress, result.hash, result.capsule).send({from: accounts[0]});
         //lab_instance.methods.carregaDocument(aliceSCAddress, hashDoc).send({from:accounts[0]});
+        
+        this.setState({
+          ipfsHash: result.hash,
+          capsule: result.capsule
+        });
+
         console.log(result.capsule)
         console.log(result.hash)
       }).catch((e) => {console.log(e.message)})
+
+
+      await lab_instance.methods.carregaDocument(aliceSCAddress, this.state.ipfsHash, this.state.capsule).send({from: accounts[0]});
 
 
         
@@ -160,12 +173,19 @@ class Lab extends Component {
          
         
         // Refresh, using withRouter
-        this.props.history.push('/');
-        this.props.history.push('/Laboratorio');
+        //this.props.history.push('/');
+        //this.props.history.push('/Laboratorio');
     } catch (err) {
         this.setState({ errorMessage: err.message });
     } finally {
-        this.setState({ loading: false });
+        this.setState({ loading: false, 
+          Nombre: '',
+          apellidos: '',
+          nacimiento:'',
+          resultado:'',
+          expedicion:'',
+          validez:'',
+          EthAddress: ''});
     }
 
   };
@@ -276,13 +296,6 @@ class Lab extends Component {
           </Grid.Column>
         </Grid>
         
-            {/* <label>Seleccionar documento:</label>
-            <form onSubmit = {this.onSubmit}>
-              <input type = 'file' onChange = {this.captureFile}/>
-              <input type = 'submit' /> 
-            </form> */}
-
-          
         <Form onSubmit={this.onSubmit} error={!!this.state.errorMessageAlta}>
           <Form.Field>
             <div></div>

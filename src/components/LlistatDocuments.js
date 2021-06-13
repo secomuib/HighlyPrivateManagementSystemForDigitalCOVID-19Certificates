@@ -54,17 +54,19 @@ class LlistatDocuments extends Component {
         console.log(this.props.id)
 
       this.setState({
+        loading: true, 
+        errorMessageAlta: '',
         view: true
       });
-
-
       const accounts = await web3.eth.getAccounts();
+      console.log('accounts' + accounts[0])
       var address = await who.methods.userSC(accounts[0]).call();
       var instance = await user(address);
       console.log('hola')
       console.log(this.state.entitat);
 
-      if(this.props.entitat == false){
+      if(this.props.externalDocs == false){
+        console.log('HOLA')
         const capsule = await  instance.methods.getDocsCapsule(this.props.id).call({from: accounts[0]});
         console.log('Capsule: '+ capsule);
         
@@ -129,23 +131,27 @@ class LlistatDocuments extends Component {
           headers:{
             'Content-type': 'application/json',
           }
-        }).then(response => response.json()
-        ).then(result=> {
-          console.log('Result cfrags' + result.cfrags)
-          console.log('Result capsule' + result.capsule)
-          
-          this.setState({
-            bob_capsule: result.capsule,
-            bob_cfrags: result.cfrags
-          })
-
+        }).then((response) => {
+          return response.json()
+     }).then(result=> {
+       this.setState({
+         nombre: result.nombre,
+         apellidos: result.apellidos, 
+         nacimiento: result.nacimiento,
+         prueba: result.prueba, 
+         resultado: result.resultado,
+         expedicion:result.fechaExpedicion,
+         validez: result.periodoValidez
+       });
+       
+       this.verDocumento()
+        
           //console.log('aliceSCAddress' + aliceSCAddress)
           //lab_instance.methods.carregaDocument(aliceSCAddress, result.hash, result.capsule).send({from: accounts[0]});
           //lab_instance.methods.carregaDocument(aliceSCAddress, hashDoc).send({from:accounts[0]});
           //console.log(result.capsule)
           //console.log(result.hash)
         }).catch((e) => {console.log(e.message)})
-        console.log("prova cfrags: " + this.state.cfrags);
 
         /*await fetch('/decryption', {
           method: 'POST',
@@ -182,7 +188,7 @@ class LlistatDocuments extends Component {
 
 verDocumento(){
   if((this.state.prueba === "Test de antígenos" 
-  || this.state.prueba === "pcr") && this.state.resultado === "Positivo"){
+  || this.state.prueba === "PCR") && (this.state.resultado === "Positivo" || this.state.resultado ==="positivo")){
     var color = '#FFA4A8'
   }else{
     var color = '#AEFFA4'
@@ -296,12 +302,11 @@ verDocumento(){
               <Table.Cell style={{ width: 700}}>{this.props.delivery}</Table.Cell>
               <Table.Cell style={{width:300}}>
                   
-                    <Button animated='vertical' color='blue' onClick={this.onView}>
+                    <Button animated='vertical' color='blue' onClick={this.onView} primary loading={this.state.loading}>
                       <Button.Content hidden>View</Button.Content>
                       <Button.Content visible>
                         <Icon name='eye' />
                       </Button.Content>
-                      
                     </Button>
                     
               </Table.Cell>

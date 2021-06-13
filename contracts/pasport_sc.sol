@@ -165,6 +165,7 @@ contract lab{
     }*/
 
     event newDocument(address);
+    //NO FA FALTA RETORNI EL HASH DEL DOCUMENT QUE S'HA INTRODUÏT ES POT ELIMINAR EL RETURN !!!
     function carregaDocument(address _alice_SC_Adr, string memory _hashDoc, string memory _capsule) public onlyOwner() returns (string memory){
         
         user(_alice_SC_Adr).newDoc(_hashDoc, _capsule);
@@ -239,7 +240,7 @@ contract user{
     }
     
     function newDoc(string memory _hash, string memory _capsule) public /*onlyLab()*/{
-        uint256 index= extDocs.length;
+        uint256 index= docs.length;
         indexDocs[_hash] = index;
         capsule.push(_capsule);
         docs.push(_hash);

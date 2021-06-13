@@ -110,7 +110,9 @@ class User extends Component {
         }
       } finally {
         this.setState({
-          loading: false
+          loading: false,
+          addressEnt: '',
+          docHash: ''
         });
       }
     }catch(err){
@@ -124,13 +126,15 @@ class User extends Component {
   requestDoc = async event => {
     try{
       event.preventDefault();
+      this.setState({ loading: true, errorMessageAlta: '' });
       const accounts = await web3.eth.getAccounts();
       console.log('address ent: ' + this.state.addressEnt);
       await who.methods.getAliceDocs(this.state.addressUsuExt, accounts[0]).send({from: accounts[0]});
     }catch(err){
       this.setState({errorMessage:err.message});
     }finally {
-      this.setState({ loading: false });
+      this.setState({ loading: false,
+        addressUsuExt: ''});
     }
   }
 
@@ -152,19 +156,11 @@ class User extends Component {
           console.log(text.alices_public_key)
           address = who.methods.registerUser(accounts[0], text.alices_public_key).send({ from: accounts[0] });
           const myStorage = window.localStorage;
-          myStorage.setItem('clau privada usuari ' + accounts, text.alices_private_keyBytes);
-          myStorage.setItem('clau publica usuari ' + accounts, text.alices_public_key);
+          myStorage.setItem('clau privada usuari ' + accounts[0], text.alices_private_keyBytes);
+          myStorage.setItem('clau publica usuari ' + accounts[0], text.alices_public_key);
          
          });
-        /*const myStorage = window.localStorage;
-        myStorage.setItem('claus usuari ' + accounts, JSON.stringify(data));
-        this.setState({
-          claus: data
-        });*/
-
-        //Registrem l'usuari --> desplegament de l'SC
-        //address = await who.methods.registerUser(this.state.claus['alices_public_key']).send({from: accounts[0]});
-        //console.log("Contract Address user: " + address);
+        
         var address = await who.methods.userSC(accounts[0]).call();
         instance = await user(address);
         console.log('Instance: ' + typeof (instance));
@@ -172,45 +168,15 @@ class User extends Component {
       } else {
 
         instance = await user(address);
-        const alice_PubKey = await instance.methods.getPubKey().call();
-        console.log('alice_public_key' + alice_PubKey)
+        //const alice_PubKey = await instance.methods.getPubKey().call();
+        //console.log('alice_public_key' + alice_PubKey)
 
         const myStorage = window.localStorage;
-        //console.log(myStorage.getItem('claus usuari ' + accounts));
 
         //Si al navegador de l'usuari no hi ha clau públiques
         if ((myStorage.getItem('clau privada usuari ' + accounts) == null) && (myStorage.getItem('clau privada usuari ' + accounts) == null)) {
-          /*Swal.fire({
-            title: 'Es necesario actualizar las llaves del usuario.',
-            text: '¿Desea realizarlo ahora?',
-            showCloseButton: true,
-            showDenyButton: true,
-            confirmButtonText: 'Continuar',
-            denyButtonText: 'Cancelar',
-            width: 600,
-            padding: '3em',
-            backdrop: `
-              left top
-              no-repeat
-            `
-        }).then((result) => {
-          if(result.isConfirmed){*/
-
-          //CREACIÓ DE LES CLAUS DE L'USUARI I EMMAGATZEMAMENT D'AQUESTES AL NAVEGADOR
-         /* await axios.get('/private-key-creation').then((response) => {
-            const { data } = (response);
-            console.log('Data ' + data);
-
-            const myStorage = window.localStorage;
-            myStorage.setItem('clau privada usuari ' + accounts, data);
-            console.log(typeof(data))
-            this.pubKey(data);
-            
-
-          });*/
-
           
-          
+          //Creem les claus de l'usuari i les emmagatzemem al navegador
           axios.get('/keysCreation').then((response) => {
             const { data } = (response);
             console.log('Data ' + data);
@@ -224,16 +190,7 @@ class User extends Component {
               claus: data
             });
           });
-        
-
-
-         /* instance.methods.newPubKey(this.state.claus['alices_public_key']).send({from: accounts[0]});
-          
-            }else if(result.isDenied){
-              console.log('Denegado')
-            }
-          })*/
-          }
+        }
 
 
           const NumDocumentos = await instance.methods.lengthDocArray().call({from: accounts[0]});
@@ -335,10 +292,9 @@ class User extends Component {
 
 renderDeliveryRows() {
     var deliveries;
-    var entity;
+    var externalDocs; 
 
-    entity = this.state.entidad;
-    console.log('Render delivery rows ' + entity);
+    externalDocs = false;
 
     deliveries = this.state.ipfsHash;
     console.log('Hash render: ' + deliveries);
@@ -350,7 +306,7 @@ renderDeliveryRows() {
           key={index}
           id={index}
           delivery={delivery}
-          entitat = {entity}
+          externalDocs = {externalDocs}
         />
       );
     });
@@ -358,9 +314,9 @@ renderDeliveryRows() {
 
   renderExternalRows() {
     var deliveries;
-    var entity; 
+    var externalDocs; 
 
-    entity = this.state.entidad;
+    externalDocs = true;
 
     deliveries = this.state.extIPFSHash;
     console.log('Hash render: ' + deliveries);
@@ -371,7 +327,7 @@ renderDeliveryRows() {
           key={index}
           id={index}
           delivery={delivery}
-          entitat = {entity}
+          externalDocs = {externalDocs}
         />
       );
     });
@@ -481,7 +437,7 @@ renderDeliveryRows() {
 
               <Message error header="Error" content={this.state.errorMessageAlta} />
 
-              <Button color='blue' size='large' onClick={() => this.sendDoc} enable loading={this.state.loading}>
+              <Button color='blue' size='large' onClick={() => this.sendDoc} primary loading={this.state.loading}>
                 Enviar documento
           </Button>
 
@@ -543,7 +499,7 @@ renderDeliveryRows() {
                   onChange={event => this.setState({ addressUsuExt: event.target.value })}
                 />
               </Form.Field>
-            <Button color='blue' style={{ marginBottom: '20px'}} size='large' onClick={() => this.requestDoc} enable loading={this.state.loading}>
+            <Button color='blue' style={{ marginBottom: '20px'}} size='large' onClick={() => this.requestDoc} primary loading={this.state.loading}>
               Enviar solicitud
             </Button>
             </Form>

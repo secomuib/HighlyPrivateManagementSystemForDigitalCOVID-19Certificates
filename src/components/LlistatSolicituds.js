@@ -28,6 +28,8 @@ class LlistatSolicituds extends Component {
 
   accept = async () => {
     try{
+      this.setState({ loading: true, errorMessageAlta: '' });
+      
       const accounts = await web3.eth.getAccounts();
       await who.methods.resolveAliceDocs(this.props.id).send({from:accounts[0]});
     }catch(err){
@@ -39,18 +41,24 @@ class LlistatSolicituds extends Component {
 
   deny = async () => {
     try{
+      this.setState({ loading: true, errorMessageAlta: '' });
+
       const accounts = await web3.eth.getAccounts();
       await who.methods.denySol(this.props.id).send({from:accounts[0]});
     }catch(err){
       this.setState({errorMessage:err.message});
     }finally {
       this.setState({ loading: false });
+      //this.props.history.push('/');
+      //this.props.history.push('/Usuario');
     }
   }
 
   acceptUsuari = async () => {
     
   try{
+      this.setState({ loading: true, errorMessageAlta: '' });
+
       var bobAddr;
 
       bobAddr = this.props.sol_Addr_Bob;
@@ -105,15 +113,24 @@ class LlistatSolicituds extends Component {
       console.log('docHas: ' + this.state.hashDoc);
       entityInstance.methods.newExtDoc(this.state.hashDoc, pubKeyUser, capsule, this.state.kfrags0, this.state.alices_verifying_key).send({ from: accounts[0] });
       console.log('kfrags[0] ' + this.state.kfrags0)
+
+
+      //Donem la solicitud per resolta
+      await instance.methods.resolveSol(this.props.id).send({from:accounts[0]});
+
     }catch(err){
       this.setState({errorMessage:err.message});
     }finally {
       this.setState({ loading: false });
+      this.props.history.push('/');
+      this.props.history.push('/Usuario');
     }
   }
 
   denyUsuari = async () => {
     try{
+      this.setState({ loading: true, errorMessageAlta: '' });
+
       const accounts = await web3.eth.getAccounts();
      
       const scAddr = await who.methods.getUserSC(accounts[0]).call({from: accounts[0]});
@@ -125,6 +142,8 @@ class LlistatSolicituds extends Component {
       this.setState({errorMessage:err.message});
     }finally {
       this.setState({ loading: false });
+      //this.props.history.push('/');
+      //this.props.history.push('/Usuario');
     }
   }
 
@@ -139,7 +158,7 @@ class LlistatSolicituds extends Component {
                 <Table.Cell style={{ width:300, textAlign: "center"}}>{this.props.sol_Addr_Alice}</Table.Cell>
                 <Table.Cell style={{ width: 90, textAlign: "center"}}>
                     
-                      <Button  color='blue' onClick={this.accept}>
+                      <Button  color='blue' onClick={this.accept} primary loading={this.state.loading}>
                         <Button.Content>
                           <Icon name='check' />
                         </Button.Content>
@@ -147,7 +166,7 @@ class LlistatSolicituds extends Component {
                       
                 </Table.Cell>
                 <Table.Cell style={{ width: 90, textAlign: "center"}}>
-                    <Button color='blue' onClick={this.deny}>
+                    <Button color='blue' onClick={this.deny} primary loading={this.state.loading}>
                         <Button.Content>
                             <Icon name='times'/>
                         </Button.Content>
@@ -169,7 +188,7 @@ class LlistatSolicituds extends Component {
 
                 <Table.Cell style={ {textAlign: "center"}}>
                     
-                      <Button  color='blue' onClick={() => this.acceptUsuari}>
+                      <Button  color='blue' onClick={() => this.acceptUsuari()} primary loading={this.state.loading}>
                         <Button.Content>
                           <Icon name='check' />
                         </Button.Content>
@@ -177,7 +196,7 @@ class LlistatSolicituds extends Component {
                       
                 </Table.Cell>
                 <Table.Cell style={ { textAlign: "center"}}>
-                    <Button color='blue' onClick={this.denyUsuari}>
+                    <Button color='blue' onClick={this.denyUsuari} primary loading={this.state.loading}>
                         <Button.Content>
                             <Icon name='times'/>
                         </Button.Content>
