@@ -122,8 +122,8 @@ class LlistatSolicituds extends Component {
       this.setState({errorMessage:err.message});
     }finally {
       this.setState({ loading: false });
-      this.props.history.push('/');
-      this.props.history.push('/Usuario');
+      //this.props.history.push('/');
+      //this.props.history.push('/Usuario');
     }
   }
 

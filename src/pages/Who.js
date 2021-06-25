@@ -51,8 +51,8 @@ class Who extends Component {
         const accounts = await web3.eth.getAccounts();
         await who.methods.registerLab(this.state.labAlta, this.state.lab_name).send({from: accounts[0]});
 
-        const labsCount =  await who.methods.getLabsCount().call({from: accounts[0]});
-        console.log(labsCount);
+        //const labsCount =  await who.methods.getLabsCount().call({from: accounts[0]});
+        //console.log(labsCount);
 
         //Refresc de la pàgina
         //window.location.reload();

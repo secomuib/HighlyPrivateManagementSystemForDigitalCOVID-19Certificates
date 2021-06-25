@@ -3,16 +3,21 @@
 pragma solidity >0.7.4;
 
 contract who{
-    //Direcció del propietari 
+    //Direcció del propietari de l'smart contract de l'Organització Mundial de la Salut
     address owner = 0x70F6714dCa2f53A17558C5dff99D572959f77D9c;
+
+    //Definició de variables
     address SC_WHO;
     address[] public Active_Labs;
     address[] public Active_Users;
+    uint256 numRequests = 0;
+
+    //Definició de mappings 
     mapping (uint256 => request) public requests;
     mapping (address => struct_Lab) public Lab;
     mapping (address => address) public userSC;
-    uint256 numRequests = 0;
     
+    //Definició d'estructures    
     struct struct_Lab{
         string name;
         bool active;
@@ -25,20 +30,58 @@ contract who{
         address entity;
     }
 
+    //Constructor 
     constructor(){
         SC_WHO = address(uint160(address(this)));    
     }
 
+    //------ FUNCIONS ------
 
-    event newLab(string, address);
+    //------ Gestió de laboratoris------
+
+    //Registre d'un nou laboratori al sistema
+    event newLab(string labName, address adr_lab);
     function registerLab(address payable _lab, string memory _name) public onlyOwner() {
-        Lab[_lab].sc_adr = address(new lab(_lab));
+        Lab[_lab].sc_adr = address(new lab(_lab, SC_WHO));
         Active_Labs.push(_lab);
         Lab[_lab].name=_name;
         Lab[_lab].active = true;
         emit newLab(_name, _lab);
     }
     
+    //Baixa d'un laboratori (destrucció de l'smart contract)
+    event labDeleted(address adr_lab, string labName);
+    function deleteLab(address _lab, address _sc_adr) public onlyOwner(){
+        Lab[_lab].active = false;
+        lab(_sc_adr).destruct();
+        string memory labname = Lab[_lab].name;
+        emit labDeleted(_lab, labname);
+    }
+    
+    //Nombre de laboratoris registrats
+    function getLabsCount()public view onlyOwner() returns(uint256){
+        return Active_Labs.length;        
+    }
+
+    //Nom d'un laboratori registrat
+    function getLabName(address adr_Lab) public view onlyOwner() returns(string memory){
+        return Lab[adr_Lab].name;
+    }
+    
+    //Estat d'un laboratori registrat (actiu - inactiu)
+    function getLabState(address adr_Lab) public view onlyOwner() returns(bool){
+        return Lab[adr_Lab].active;
+    }
+    
+    //Smart contract d'un laboratori registrat
+    function getLabSC(address adr_Lab) public view onlyOwner() returns(address){
+        return Lab[adr_Lab].sc_adr;
+    }
+
+
+    //------ Gestió d'usuaris ------
+
+    //Registre d'un nou usuari
     event new_User(address);
     function registerUser(address _owner, string memory _pubKey) external returns (address) {
         address userOwner = _owner;
@@ -50,50 +93,12 @@ contract who{
         return (sc_adr);
     }
     
-    event entity(address, bool);
-    function Entity(bool active, address _entityAdr) public onlyOwner(){
-        address entitySC = userSC[_entityAdr];
-        user(entitySC).activeEntity(active);
-        emit entity(_entityAdr, active);
-    }
-    
-    function getLabsCount()public view onlyOwner() returns(uint256){
-        return Active_Labs.length;        
-    }
-
-    /*function getUsersCount()public view onlyOwner() returns(uint256){
-        return Active_Users.length;        
-    }*/
-
-    /*function getLab(uint _index) public view onlyOwner() returns(address){
-        return Active_Labs[_index];
-    }*/
-
-    function getLabName(address adr_Lab) public view onlyOwner() returns(string memory){
-        return Lab[adr_Lab].name;
-    }
-    
-    function getLabState(address adr_Lab) public view onlyOwner() returns(bool){
-        return Lab[adr_Lab].active;
-    }
-    
-    function getLabSC(address adr_Lab) public view returns(address){
-        return Lab[adr_Lab].sc_adr;
-    }
-    
+    //Obtenció de l'adreça de l'smart contract d'un usuari
     function getUserSC(address adr_User) public view returns(address){
         return userSC[adr_User];
-    }
-    
-    function getWHO_sc_address() public view returns (address) {
-        return SC_WHO;
-    }
+    }  
 
-    function deleteLab(address _lab, address _sc_adr) public onlyOwner(){
-        Lab[_lab].active = false;
-        lab(_sc_adr).destruct();
-    }
-
+    //Solicitud externa d'un certificat d'un usuari
     function getAliceDocs(address _alices_address, address _entity_address) public {
         requests[numRequests].alice_address = _alices_address;
         requests[numRequests].entity = _entity_address;
@@ -105,16 +110,7 @@ contract who{
         numRequests = numRequests + 1;
     }
 
-    function getNumRequests() public view onlyOwner() returns(uint256) {
-        return numRequests;
-    }   
-
-    function obtainRequests(uint256 _identifier) public view onlyOwner() returns(address alice_address, address entityReq) {
-        if(!requests[_identifier].resolved){
-            return (requests[_identifier].alice_address, requests[_identifier].entity);
-        }
-    }
-    
+    //Resolució d'una sol·licitud
     function resolveAliceDocs(uint256 _identifier) public onlyOwner(){
         address aliceAdr = requests[_identifier].alice_address;
         address aliceSC = userSC[aliceAdr];
@@ -123,91 +119,121 @@ contract who{
         user(aliceSC).newSol(entitat);
     }
 
+    //Denegació d'una sol·licitud
     function denySol(uint256 _identifier) public onlyOwner(){
         requests[_identifier].resolved = true;
     }
-    
+
+    //Obtenció del nombre de peticions existents
+    function getNumRequests() public view onlyOwner() returns(uint256) {
+        return numRequests;
+    }
+
+    //Obtenció de la informació correponent a una sol·licitud
+    function obtainRequests(uint256 _identifier) public view onlyOwner() returns(address alice_address, address entityReq) {
+        if(!requests[_identifier].resolved){
+            return (requests[_identifier].alice_address, requests[_identifier].entity);
+        }
+    }
+
+    //Gestió d'entitats
+    //Activació/Desactivació de l'atribut d'entitat fiable
+    event entity(address, bool);
+    function Entity(bool active, address _entityAdr) public onlyOwner(){
+        address entitySC = userSC[_entityAdr];
+        user(entitySC).activeEntity(active);
+        emit entity(_entityAdr, active);
+    }
+       
+    /*function getWHO_sc_address() public view returns (address) {
+        return SC_WHO;
+    }*/
+
+
+    // Modifier
     modifier onlyOwner(){
         require(msg.sender == owner || msg.sender == SC_WHO, "L'adresa que ha realitzat la crida no te els permissos de propietat.");
         _;
-    }
-    
-    /*function addUser(address _user, address _sc)external{
-        Active_Users.push(_user); 
-        userSC[_user] = _sc;
-    }*/
-    
+    }  
 }
+
 contract lab{
-    
+
+    //Definició de variables
     address payable  owner;
-    address scAddress;
+    //address scAddress;
     string hashA;
+    address whoSC_Addr;
     
-    
-    constructor(address payable _lab){
+    //------ FUNCIONS ------
+    //Constructor de l'smart contract
+    constructor(address payable _lab, address _whoSC_Addr){
         owner = _lab;
-        scAddress = address (this);
+        whoSC_Addr = _whoSC_Addr;
+        //scAddress = address (this);
     }
 
-     modifier onlyOwner(){
-        require(msg.sender == owner, "L'adresa que ha realitzat la crida no te els permissos de propietat.");
-        _;
-    }
-
-    function getOwner() public view returns(address){
-        return(owner);
-    }
-
-    /*function document(string memory _hashDoc) public returns (string memory){
-        hashA = _hashDoc;
-        return(_hashDoc);
-    }*/
-
+    //Càrrega d'un nou document a l'smart contract d'un usuari del sistema
     event newDocument(address);
     //NO FA FALTA RETORNI EL HASH DEL DOCUMENT QUE S'HA INTRODUÏT ES POT ELIMINAR EL RETURN !!!
-    function carregaDocument(address _alice_SC_Adr, string memory _hashDoc, string memory _capsule) public onlyOwner() returns (string memory){
+    function carregaDocument(address _alice_SC_Adr, string memory _hashDoc, string memory _capsule) public onlyOwner() /*returns (string memory)*/{
         
         user(_alice_SC_Adr).newDoc(_hashDoc, _capsule);
 
         emit newDocument(_alice_SC_Adr);
-        return(hashA);
+        //return(hashA);
     }
 
+    //Funció de baixa del laboratori, destrucció de l'smart contract
     event bajaLaboratorio(address);
-    function destruct()external{
+    function destruct()external onlyWHO(){
         selfdestruct(owner);
         emit bajaLaboratorio(owner);
+    }
+
+    /*function getOwner() public view returns(address){
+        return(owner);
+    }*/
+
+    //------MODIFIERS------
+    modifier onlyOwner(){
+        require(msg.sender == owner, "L'adresa que ha realitzat la crida no te els permissos de propietat.");
+        _;
+    }
+
+    modifier onlyWHO(){
+        require(msg.sender == whoSC_Addr, "L'adresa que ha realitzat la crida no te els permissos de propietat.");
+        _;
     }
 }
 
 contract user{ 
     
+    //Definició de variables
     string pubKey;
     string [] public docs;
     string [] public capsule;
     string [] public extDocs;
-    //string [] public extCapsule;
-    //string [] public extKfrags;
-    //string [] public userPubKey;
 
-    address sc_adr;
+    //address sc_adr;
     address owner;
     address whoSC_Addr;
     bool entity;
     uint256 numRequests = 0;
     
+    //Definició de mappings
     mapping (string => uint256) public indexDocs;
     //mapping (string => uint256) index_extDocs;
-    mapping (string => kfrags) public kfrag;
+    mapping (string => externalDocParams) public extDocParams;
     mapping (uint256 => request) public requests;
     
+    //Definició d'estructures
     struct request{
         bool resolved;
         address entity_address;
     }
     
-    struct kfrags{
+    struct externalDocParams{
         string exthash;
         string extPubKey;
         string capsule;
@@ -215,52 +241,48 @@ contract user{
         string verifyingKey;
     }
     
+    //------FUNCIONS------
+    //Constructor
     constructor(address _owner, string memory  _pubKey, address _whoSC_Addr) {
         owner = _owner;
-        sc_adr = address(uint160(address(this)));
+        //sc_adr = address(uint160(address(this)));
         whoSC_Addr = _whoSC_Addr;
         pubKey = _pubKey;
         entity = false;
     }
-//Es pot elminar no és necessari:
-    /*function getOwner() view public returns(address) {
-        return (owner);
-    }
-//Es pot elminar no és necessari:
-    function getMSGSender()  view public returns(address) {
-        return (msg.sender);
-    }*/
 
+    //------Gestió de la clau d'encriptació pública de l'usuari------
+    //Obtenció de la clau pública de l'usuari
     function getPubKey() view public returns(string memory publicKey){
         return (pubKey); 
     }
 
+    //Introducció d'una nova clau pública, per a substituir l'anterior
     function newPubKey(string memory _pubKey) public onlyOwner(){
         pubKey = _pubKey;
     }
     
+    //------Gestió de certificats------
+    //Introducció d'un nou certificats, execució des d'un laboratori del sistema
     function newDoc(string memory _hash, string memory _capsule) public /*onlyLab()*/{
         uint256 index= docs.length;
         indexDocs[_hash] = index;
         capsule.push(_capsule);
         docs.push(_hash);
-        emit nouDoc(_hash);
-    }
-    event nouDoc(string);
-
-    function getIndexDoc(string memory _hash) public view onlyOwner() returns (uint256 index){
-        return indexDocs[_hash];
     }
     
+    //Introducció d'un certificat extern, propietat d'un altre usuari del sistema
     function newExtDoc(string memory _hash, string memory _pubKeyUser, string memory _capsule, string memory _kfrag0, string memory _alicesVerifyingKey ) public{
-        //uint256 index = extDocs.length;
-        //index_extDocs[_hash] = index;
-        //extCapsule.push(_capsule);
         extDocs.push(_hash);
-        kfrag[_hash].extPubKey = _pubKeyUser;
-        kfrag[_hash].capsule = _capsule;
-        kfrag[_hash].kfrag0 = _kfrag0;
-        kfrag[_hash].verifyingKey = _alicesVerifyingKey;
+        extDocParams[_hash].extPubKey = _pubKeyUser;
+        extDocParams[_hash].capsule = _capsule;
+        extDocParams[_hash].kfrag0 = _kfrag0;
+        extDocParams[_hash].verifyingKey = _alicesVerifyingKey;
+    }
+
+    //Funcions per a l'obtenció dels paràmetres que defineixen els diferents certificats emmagatzemats a l'smart contract
+    function getIndexDoc(string memory _hash) public view onlyOwner() returns (uint256 index){
+        return indexDocs[_hash];
     }
 
     function getDocsHash(uint _index) public view onlyOwner() returns(string memory){
@@ -276,10 +298,10 @@ contract user{
     }
     
     function getExtInfo(string memory _hash) public view onlyOwner() returns (string memory, string memory, string memory, string memory){
-        return (kfrag[_hash].extPubKey, kfrag[_hash].capsule, kfrag[_hash].kfrag0, kfrag[_hash].verifyingKey);
+        return (extDocParams[_hash].extPubKey, extDocParams[_hash].capsule, extDocParams[_hash].kfrag0, extDocParams[_hash].verifyingKey);
     }
 
-
+    //Funcions per obtenir el nombre de documents tant propietat de l'usuari com externs
     function lengthDocArray() public view onlyOwner() returns(uint){
         return docs.length;
     }
@@ -288,35 +310,43 @@ contract user{
         return extDocs.length;
     }   
     
+    //------Gestió d'entitat------
+    //Activació / desactivació de la característica d'entitat
     function activeEntity(bool _active) public onlyWHO() {
         entity = _active;
     }
     
+    //Obtenció del valor de la característica d'entitat (activa o inactiva)
     function getEntity()public view returns (bool){
         return entity;
     }
     
+    //------Gestió de sol·licituds externes------
+    //Introducció d'una nova sol·licitud d'enviament de certificat
     function newSol(address _entityAdr) public onlyWHO() {
         requests[numRequests].entity_address = _entityAdr;
         requests[numRequests].resolved = false;
         numRequests = numRequests + 1;
     }
-    
-    function getNumRequests() public view onlyOwner() returns(uint256) {
-        return numRequests;
-    }
 
+    //Resolució d'una sol·licitud
+    function resolveSol(uint256 _identifier) public onlyOwner(){
+        requests[_identifier].resolved = true;
+    }
+    
+    //Obtenció d'una petició emmagatzemada a l'smart contract
     function obtainRequests(uint256 _identifier) public view onlyOwner() returns(address entityReq) {
         if(!requests[_identifier].resolved){
             return (requests[_identifier].entity_address);
         }
     }
-
-    function resolveSol(uint256 _identifier) public onlyOwner(){
-        requests[_identifier].resolved = true;
-    }
     
+    //Obtenció del nombre de peticions total
+    function getNumRequests() public view onlyOwner() returns(uint256) {
+        return numRequests;
+    }
 
+    //------MODIFIERS------
     modifier onlyOwner(){
         require(msg.sender == owner, "L'adresa que ha realitzat la crida no te els permissos de propietat.");
         _;
