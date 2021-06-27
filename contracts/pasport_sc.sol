@@ -50,11 +50,11 @@ contract who{
     }
     
     //Baixa d'un laboratori (destrucció de l'smart contract)
-    event labDeleted(address adr_lab, string labName);
+    event labDeleted(address adr_lab, string labname);
     function deleteLab(address _lab, address _sc_adr) public onlyOwner(){
         Lab[_lab].active = false;
         lab(_sc_adr).destruct();
-        string memory labname = Lab[_lab].name;
+        string storage labname = Lab[_lab].name;
         emit labDeleted(_lab, labname);
     }
     
@@ -74,7 +74,7 @@ contract who{
     }
     
     //Smart contract d'un laboratori registrat
-    function getLabSC(address adr_Lab) public view onlyOwner() returns(address){
+    function getLabSC(address adr_Lab) public view returns(address){
         return Lab[adr_Lab].sc_adr;
     }
 
