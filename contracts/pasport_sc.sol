@@ -356,10 +356,4 @@ contract user{
         require(msg.sender == whoSC_Addr, "L'adresa que ha realitzat la crida no te els permissos de propietat.");
         _;
     }
-
-   /* modifier onlyLab(){
-        
-        require(who(whoSC_Addr).getLabState(msg.sender), "L'adresa que ha realitzat la crida no es correspon amb cap laboratori fiable.");
-        _;
-    }*/
 }

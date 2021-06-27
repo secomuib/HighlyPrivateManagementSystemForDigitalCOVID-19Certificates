@@ -72,3 +72,11 @@ To start React JS development server:
 ```
 docker run -i -p 3000:3000 -v "$PWD":/app -w /app node:12.13 npm run start
 ```
+
+### Proxy Re-encryption execution
+Requirements: [Flask 1.1.2](https://pypi.org/project/Flask/).
+
+To execute proxy: 
+```
+flask run
+```
