@@ -36,7 +36,6 @@ contract who{
     }
 
     //------ FUNCIONS ------
-
     //------ Gestió de laboratoris------
 
     //Registre d'un nou laboratori al sistema
@@ -144,12 +143,7 @@ contract who{
         user(entitySC).activeEntity(active);
         emit entity(_entityAdr, active);
     }
-       
-    /*function getWHO_sc_address() public view returns (address) {
-        return SC_WHO;
-    }*/
-
-
+      
     // Modifier
     modifier onlyOwner(){
         require(msg.sender == owner || msg.sender == SC_WHO, "L'adresa que ha realitzat la crida no te els permissos de propietat.");
@@ -161,7 +155,6 @@ contract lab{
 
     //Definició de variables
     address payable  owner;
-    //address scAddress;
     string hashA;
     address whoSC_Addr;
     
@@ -170,18 +163,13 @@ contract lab{
     constructor(address payable _lab, address _whoSC_Addr){
         owner = _lab;
         whoSC_Addr = _whoSC_Addr;
-        //scAddress = address (this);
     }
 
     //Càrrega d'un nou document a l'smart contract d'un usuari del sistema
     event newDocument(address);
-    //NO FA FALTA RETORNI EL HASH DEL DOCUMENT QUE S'HA INTRODUÏT ES POT ELIMINAR EL RETURN !!!
-    function carregaDocument(address _alice_SC_Adr, string memory _hashDoc, string memory _capsule) public onlyOwner() /*returns (string memory)*/{
-        
+    function carregaDocument(address _alice_SC_Adr, string memory _hashDoc, string memory _capsule) public onlyOwner(){
         user(_alice_SC_Adr).newDoc(_hashDoc, _capsule);
-
         emit newDocument(_alice_SC_Adr);
-        //return(hashA);
     }
 
     //Funció de baixa del laboratori, destrucció de l'smart contract
@@ -190,10 +178,6 @@ contract lab{
         selfdestruct(owner);
         emit bajaLaboratorio(owner);
     }
-
-    /*function getOwner() public view returns(address){
-        return(owner);
-    }*/
 
     //------MODIFIERS------
     modifier onlyOwner(){
