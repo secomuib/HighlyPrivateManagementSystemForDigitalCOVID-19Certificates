@@ -87,14 +87,16 @@ class LlistatSolicituds extends Component {
       const index = await instance.methods.getIndexDoc(this.state.hashDoc).call({ from: accounts[0] });
       const capsule = await instance.methods.getDocsCapsule(index).call({ from: accounts[0] });
       const pubKeyUser = await instance.methods.getPubKey().call();
-      entityInstance.methods.newExtDoc(this.state.hashDoc, pubKeyUser, capsule, this.state.kfrags0, this.state.alices_verifying_key).send({ from: accounts[0] });
+      await entityInstance.methods.newExtDoc(this.state.hashDoc, pubKeyUser, capsule, this.state.kfrags0, this.state.alices_verifying_key).send({ from: accounts[0] });
 
       //Donem la solicitud per resolta
       await instance.methods.resolveSol(this.props.id).send({ from: accounts[0] });
+
     } catch (err) {
-      this.setState({ errorMessage: err.message });
+      this.setState({ errorMessage: err.message});
     } finally {
-      this.setState({ loading: false });
+      this.setState({ loading: false,
+        hashDoc: ''   });
     }
   }
 
@@ -121,8 +123,8 @@ class LlistatSolicituds extends Component {
 
         <Table.Row>
           <Table.Cell style={{ width: 90 }}>{this.props.id}</Table.Cell>
-          <Table.Cell style={{ width: 300, textAlign: "center" }}>{this.props.sol_Addr_Bob}</Table.Cell>
-          <Table.Cell style={{ width: 300, textAlign: "center" }}>{this.props.sol_Addr_Alice}</Table.Cell>
+          <Table.Cell style={{ width: 300 }}>{this.props.sol_Addr_Bob}</Table.Cell>
+          <Table.Cell style={{ width: 300 }}>{this.props.sol_Addr_Alice}</Table.Cell>
           <Table.Cell style={{ width: 90, textAlign: "center" }}>
 
             <Button color='blue' onClick={this.accept} primary loading={this.state.loading}>

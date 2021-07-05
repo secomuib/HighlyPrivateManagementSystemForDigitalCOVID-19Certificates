@@ -256,7 +256,7 @@ contract user{
     }
     
     //Introducció d'un certificat extern, propietat d'un altre usuari del sistema
-    function newExtDoc(string memory _hash, string memory _pubKeyUser, string memory _capsule, string memory _kfrag0, string memory _alicesVerifyingKey ) public{
+    function newExtDoc(string memory _hash, string memory _pubKeyUser, string memory _capsule, string memory _kfrag0, string memory _alicesVerifyingKey) public{
         extDocs.push(_hash);
         extDocParams[_hash].extPubKey = _pubKeyUser;
         extDocParams[_hash].capsule = _capsule;

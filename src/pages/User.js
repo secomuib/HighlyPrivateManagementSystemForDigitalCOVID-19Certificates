@@ -35,12 +35,13 @@ class User extends Component {
 
   //Funció per a enviar un document des de l'usuari cap a una entitat fiable
   sendDoc = async event => {
-    try {
+    /*try {
       if (this.state.enviar == false) {
-        event.preventDefault();
-      }
-      this.setState({ loading: true, errorMessageAlta: '' });
+        
+      }*/
       try {
+        event.preventDefault();
+        this.setState({ loading: true, errorMessageAlta: '' });
         //COMPROVACIÓ QUE L'ADREÇA INTRODUÏDA PERTANY A UNA USUARI/ENTITAT FIABLE
         const accounts = await web3.eth.getAccounts();
         const scAddr = await who.methods.getUserSC(this.state.addressEnt).call({ from: accounts[0] });
@@ -75,7 +76,7 @@ class User extends Component {
           const index = await instance.methods.getIndexDoc(this.state.docHash).call({ from: accounts[0] });
           const capsule = await instance.methods.getDocsCapsule(index).call({ from: accounts[0] });
           const pubKeyUser = await instance.methods.getPubKey().call();
-          entityInstance.methods.newExtDoc(this.state.docHash, pubKeyUser, capsule, this.state.kfrags0, this.state.alices_verifying_key).send({ from: accounts[0] });
+          await entityInstance.methods.newExtDoc(this.state.docHash, pubKeyUser, capsule, this.state.kfrags0, this.state.alices_verifying_key).send({ from: accounts[0] });
         } else {
           //En cas que l'adreça no es correspongui amb la de cap entitat verificada, s'avisa a l'usuari i s'acaba la transacció
           Swal.fire({
@@ -94,18 +95,11 @@ class User extends Component {
 
             }
           })
-        }
-      } finally {
-        this.setState({
-          loading: false,
-          addressEnt: '',
-          docHash: ''
-        });
-      }
-    } catch (err) {
-      this.setState({ errorMessage: err.message });
+        } 
     } finally {
-      this.setState({ loading: false });
+      this.setState({ loading: false,
+        addressEnt: '',
+        docHash: ''});
     }
   };
 
@@ -376,7 +370,8 @@ class User extends Component {
               <Button color='blue' size='large' onClick={() => this.sendDoc} primary loading={this.state.loading}>
                 Enviar documento
               </Button>
-
+            </Form>  
+            <Form>
               {this.state.externalDocs ? (<div>
                 <Divider horizontal>
                   <h3 style={{ textAlign: "center" }}>
