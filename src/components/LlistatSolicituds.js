@@ -85,7 +85,8 @@ class LlistatSolicituds extends Component {
       var address = await who.methods.userSC(accounts[0]).call();
       const instance = await user(address);
       const index = await instance.methods.getIndexDoc(this.state.hashDoc).call({ from: accounts[0] });
-      const capsule = await instance.methods.getDocsCapsule(index).call({ from: accounts[0] });
+      const docInfo = await instance.methods.getDocsInfo(index).call({ from: accounts[0] });
+      const capsule = docInfo[1];
       const pubKeyUser = await instance.methods.getPubKey().call();
       await entityInstance.methods.newExtDoc(this.state.hashDoc, pubKeyUser, capsule, this.state.kfrags0, this.state.alices_verifying_key).send({ from: accounts[0] });
 

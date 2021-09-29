@@ -37,9 +37,13 @@
   },
   "private": true,
   "dependencies": {
+    "@nomiclabs/hardhat-waffle": "^2.0.1",
     "@truffle/hdwallet-provider": "^1.2.1",
     "axios": "^0.21.1",
     "bootstrap": "^4.6.0",
+    "chai": "^4.3.4",
+    "chai-http": "^4.3.0",
+    "ethereum-waffle": "^3.4.0",
     "fast-xml-parser": "^3.19.0",
     "fs-extra": "^9.1.0",
     "ganache-cli": "^6.12.2",
@@ -74,5 +78,12 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://localhost:5000"
+  "proxy": "http://localhost:5000",
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.2",
+    "ethers": "^5.4.6",
+    "hardhat": "^2.6.2",
+    "hardhat-gas-reporter": "^1.0.4",
+    "solidity-coverage": "^0.7.17"
+  }
 }

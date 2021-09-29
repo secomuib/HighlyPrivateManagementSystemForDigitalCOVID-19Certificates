@@ -19,12 +19,10 @@ const deploy = async () => {
   console.log('Attempting to deploy from account', accounts[0]);
 
   // We deploy the EDelivery smart contract to the Rinkeby test network
-  
+
   const result = await new web3.eth.Contract(compiledContract.abi)
-    .deploy({ data: compiledContract.evm.bytecode.object, arguments: [] })
-    .send({ from: accounts[0], gas: '8000000' });
-  
-  
+      .deploy({ data: '0x'+compiledContract.evm.bytecode.object, arguments: [] })
+      .send({ from: accounts[0], gas: '8000000' });
   
   // fs.writeFileSync('./CONTRACTADDRESS', result.options.address);
   compiledContract.address = result.options.address;

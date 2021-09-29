@@ -4,7 +4,7 @@ pragma solidity >0.7.4;
 
 contract who{
     //Direcció del propietari de l'smart contract de l'Organització Mundial de la Salut
-    address owner = 0x70F6714dCa2f53A17558C5dff99D572959f77D9c;
+    address owner = 0x959FD7Ef9089B7142B6B908Dc3A8af7Aa8ff0FA1;
 
     //Definició de variables
     address SC_WHO;
@@ -63,20 +63,23 @@ contract who{
     }
 
     //Nom d'un laboratori registrat
-    function getLabName(address adr_Lab) public view onlyOwner() returns(string memory){
+    /*function getLabName(address adr_Lab) public view onlyOwner() returns(string memory){
         return Lab[adr_Lab].name;
     }
     
     //Estat d'un laboratori registrat (actiu - inactiu)
     function getLabState(address adr_Lab) public view onlyOwner() returns(bool){
         return Lab[adr_Lab].active;
-    }
+    }*/
     
+    function getLabInfo(address adr_Lab) public view onlyOwner()returns(string memory, bool){
+        return (Lab[adr_Lab].name, Lab[adr_Lab].active);
+    }
+
     //Smart contract d'un laboratori registrat
     function getLabSC(address adr_Lab) public view returns(address){
         return Lab[adr_Lab].sc_adr;
     }
-
 
     //------ Gestió d'usuaris ------
 
@@ -98,7 +101,7 @@ contract who{
     }  
 
     //Solicitud externa d'un certificat d'un usuari
-    function getAliceDocs(address _alices_address, address _entity_address) public {
+    function getAliceDocs(address _alices_address, address _entity_address) public onlyUser(){
         requests[numRequests].alice_address = _alices_address;
         requests[numRequests].entity = _entity_address;
         requests[numRequests].resolved = false;
@@ -149,6 +152,11 @@ contract who{
         require(msg.sender == owner || msg.sender == SC_WHO, "L'adresa que ha realitzat la crida no te els permissos de propietat.");
         _;
     }  
+    
+    modifier onlyUser(){
+        require(getUserSC(msg.sender) != 0x0000000000000000000000000000000000000000, "L'adresa que ha realitzat la crida no te els permissos de propietat.");
+        _;
+    }
 }
 
 contract lab{
@@ -167,16 +175,20 @@ contract lab{
 
     //Càrrega d'un nou document a l'smart contract d'un usuari del sistema
     event newDocument(address);
-    function carregaDocument(address _alice_SC_Adr, string memory _hashDoc, string memory _capsule) public onlyOwner(){
+    function uploadCert(address _alice_SC_Adr, string memory _hashDoc, string memory _capsule) public onlyOwner(){
         user(_alice_SC_Adr).newDoc(_hashDoc, _capsule);
         emit newDocument(_alice_SC_Adr);
     }
 
     //Funció de baixa del laboratori, destrucció de l'smart contract
-    event bajaLaboratorio(address);
+    event labRemoval(address);
     function destruct()external onlyWHO(){
+        emit labRemoval(owner);
         selfdestruct(owner);
-        emit bajaLaboratorio(owner);
+    }
+    
+    function getOwner() public view returns(address labOwner){
+        return owner;
     }
 
     //------MODIFIERS------
@@ -207,7 +219,6 @@ contract user{
     
     //Definició de mappings
     mapping (string => uint256) public indexDocs;
-    //mapping (string => uint256) index_extDocs;
     mapping (string => externalDocParams) public extDocParams;
     mapping (uint256 => request) public requests;
     
@@ -229,7 +240,6 @@ contract user{
     //Constructor
     constructor(address _owner, string memory  _pubKey, address _whoSC_Addr) {
         owner = _owner;
-        //sc_adr = address(uint160(address(this)));
         whoSC_Addr = _whoSC_Addr;
         pubKey = _pubKey;
         entity = false;
@@ -242,13 +252,13 @@ contract user{
     }
 
     //Introducció d'una nova clau pública, per a substituir l'anterior
-    function newPubKey(string memory _pubKey) public onlyOwner(){
+    /*function newPubKey(string memory _pubKey) public onlyOwner(){
         pubKey = _pubKey;
-    }
+    }*/
     
     //------Gestió de certificats------
     //Introducció d'un nou certificats, execució des d'un laboratori del sistema
-    function newDoc(string memory _hash, string memory _capsule) public /*onlyLab()*/{
+    function newDoc(string memory _hash, string memory _capsule) public onlyLab(){
         uint256 index= docs.length;
         indexDocs[_hash] = index;
         capsule.push(_capsule);
@@ -256,7 +266,7 @@ contract user{
     }
     
     //Introducció d'un certificat extern, propietat d'un altre usuari del sistema
-    function newExtDoc(string memory _hash, string memory _pubKeyUser, string memory _capsule, string memory _kfrag0, string memory _alicesVerifyingKey) public{
+    function newExtDoc(string memory _hash, string memory _pubKeyUser, string memory _capsule, string memory _kfrag0, string memory _alicesVerifyingKey) public onlyUser(){
         extDocs.push(_hash);
         extDocParams[_hash].extPubKey = _pubKeyUser;
         extDocParams[_hash].capsule = _capsule;
@@ -269,13 +279,18 @@ contract user{
         return indexDocs[_hash];
     }
 
-    function getDocsHash(uint _index) public view onlyOwner() returns(string memory){
+    function getDocsInfo(uint _index) public view onlyOwner() returns(string memory, string memory){
+        return (docs[_index], capsule[_index]);
+    }
+
+
+    /*function getDocsHash(uint _index) public view onlyOwner() returns(string memory){
         return docs[_index];
     }
 
     function getDocsCapsule(uint _index) public view onlyOwner() returns (string memory){
         return capsule[_index];
-    }
+    }*/
     
     function getExtDocs(uint _index) public view onlyOwner() returns(string memory) {
         return extDocs[_index];
@@ -338,6 +353,17 @@ contract user{
     
     modifier onlyWHO(){
         require(msg.sender == whoSC_Addr, "L'adresa que ha realitzat la crida no te els permissos de propietat.");
+        _;
+    }
+    
+    modifier onlyLab(){
+        address lab_owner = lab(msg.sender).getOwner();
+        require(who(whoSC_Addr).getLabSC(lab_owner) != 0x0000000000000000000000000000000000000000, "L'adresa que ha realitzat la crida no te els permissos de propietat.");
+        _;
+    }
+    
+    modifier onlyUser(){
+         require(who(whoSC_Addr).getUserSC(msg.sender) != 0x0000000000000000000000000000000000000000, "L'adresa que ha realitzat la crida no te els permissos de propietat.");
         _;
     }
 }

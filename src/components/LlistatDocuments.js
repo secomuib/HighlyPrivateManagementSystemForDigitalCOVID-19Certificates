@@ -57,8 +57,8 @@ class LlistatDocuments extends Component {
       var instance = await user(address);
 
       if (this.props.externalDocs == false) {
-        const capsule = await instance.methods.getDocsCapsule(this.props.id).call({ from: accounts[0] });
-
+        const docInfo = await instance.methods.getDocsInfo(this.props.id).call({ from: accounts[0] });
+        const capsule = docInfo[1];
         const myStorage = window.localStorage;
 
         await fetch('/decryption', {

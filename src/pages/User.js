@@ -74,7 +74,8 @@ class User extends Component {
           })
           const instance = await user(this.state.address);
           const index = await instance.methods.getIndexDoc(this.state.docHash).call({ from: accounts[0] });
-          const capsule = await instance.methods.getDocsCapsule(index).call({ from: accounts[0] });
+          const docsInfo = await instance.methods.getDocsInfo(index).call({ from: accounts[0] });
+          const capsule = docsInfo[1];
           const pubKeyUser = await instance.methods.getPubKey().call();
           await entityInstance.methods.newExtDoc(this.state.docHash, pubKeyUser, capsule, this.state.kfrags0, this.state.alices_verifying_key).send({ from: accounts[0] });
         } else {
@@ -167,14 +168,26 @@ class User extends Component {
 
 
         const NumDocumentos = await instance.methods.lengthDocArray().call({ from: accounts[0] });
-        const hash = await Promise.all(
+        const infoDocs = await Promise.all(
           Array(parseInt(NumDocumentos))
             .fill()
             .map((delivery, index) => {
-              return instance.methods.getDocsHash(index).call({ from: accounts[0] });
+              return instance.methods.getDocsInfo(index).call({ from: accounts[0] });
             })
         );
+            console.log('infoDocs');
+            console.log(infoDocs);
 
+        const hash = await Promise.all(
+          Array(parseInt(NumDocumentos))
+          .fill()
+          .map((delivery, index) => {
+            console.log(index)
+            return infoDocs[index][0];
+          })
+        );
+        console.log('hash');
+        console.log(hash);
 
         const numExtDoc = await instance.methods.lengthExtDocArray().call({ from: accounts[0] });
         if (numExtDoc >= 1) {
@@ -212,9 +225,9 @@ class User extends Component {
           ipfsHash: hash,
           extIPFSHash: extHash,
           entidad: entidad
-
         });
-
+        
+        //console.log(this.state.ipfsHash)
         this.setState({ loadingPage: false })
       };
 

@@ -108,23 +108,27 @@ class Who extends Component {
             return who.methods.Active_Labs(index).call();
           })
       );
+      console.log(ArrayLabs);
 
-      const statLabs = await Promise.all(
+      const infoLabs = await Promise.all(
         Array(parseInt(NumLaboratorios))
           .fill()
           .map((delivery, index) => {
-            return who.methods.getLabState(ArrayLabs[index]).call({ from: accounts[0] });
+            return who.methods.getLabInfo(ArrayLabs[index]).call({ from: accounts[0] });
+
           })
       );
+      console.log(infoLabs)
 
-      const ArrayNames = await Promise.all(
+      /*const ArrayNames = await Promise.all(
         Array(parseInt(NumLaboratorios))
           .fill()
           .map((delivery, index) => {
             const address = ArrayLabs[index];
-            return who.methods.getLabName(address).call({ from: accounts[0] });
+            const labInfo = who.methods.getLabInfo(address).call({ from: accounts[0] });
+            return labInfo[1];
           })
-      );
+      );*/
 
       const NumRequests = await who.methods.getNumRequests().call({ from: accounts[0] });
       const requests = await Promise.all(
@@ -137,8 +141,7 @@ class Who extends Component {
 
       this.setState({
         ArrayLabs: ArrayLabs,
-        labName: ArrayNames,
-        StateLabs: statLabs,
+        labInfo: infoLabs,
         Docsrequests: requests
       });
     } finally {
@@ -149,11 +152,10 @@ class Who extends Component {
   renderDeliveryRows() {
     var deliveries;
     var labName;
-    var StateLabs;
+    var labInfo;
 
     deliveries = this.state.ArrayLabs;
-    labName = this.state.labName;
-    StateLabs = this.state.StateLabs;
+    labInfo = this.state.labInfo;
 
     return deliveries.map((delivery, index) => {
       return (
@@ -161,8 +163,8 @@ class Who extends Component {
           key={index}
           id={index}
           delivery={delivery}
-          name={labName[index]}
-          estado={StateLabs[index].toString()}
+          name={labInfo[index][0]}
+          estado={labInfo[index][1].toString()}
         />
       );
     });

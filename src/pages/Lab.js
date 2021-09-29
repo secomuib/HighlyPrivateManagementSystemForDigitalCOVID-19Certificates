@@ -91,7 +91,7 @@ class Lab extends Component {
       }).catch((e) => { console.log(e.message) })
 
 
-      await lab_instance.methods.carregaDocument(aliceSCAddress, this.state.ipfsHash, this.state.capsule).send({ from: accounts[0] });
+      await lab_instance.methods.uploadCert(aliceSCAddress, this.state.ipfsHash, this.state.capsule).send({ from: accounts[0] });
 
     } catch (err) {
       this.setState({ errorMessage: err.message });
