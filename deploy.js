@@ -16,13 +16,13 @@ const web3 = new Web3(provider);
 const deploy = async () => {
   const accounts = await web3.eth.getAccounts();
   console.log(accounts);
-  console.log('Attempting to deploy from account', accounts[0]);
+  console.log('Attempting to deploy from account', accounts[1]);
 
   // We deploy the EDelivery smart contract to the Rinkeby test network
 
   const result = await new web3.eth.Contract(compiledContract.abi)
       .deploy({ data: '0x'+compiledContract.evm.bytecode.object, arguments: [] })
-      .send({ from: accounts[0], gas: '8000000' });
+      .send({ from: accounts[1], gas: '8000000' });
   
   // fs.writeFileSync('./CONTRACTADDRESS', result.options.address);
   compiledContract.address = result.options.address;
